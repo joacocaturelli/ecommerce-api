@@ -15,6 +15,8 @@ import wishListRoutes from "./routes/wishlist.routes.js";
 import cartRoutes from "./routes/cart.routes.js";
 import orderRoutes from "./routes/orders.routes.js";
 
+import { stripeWebhook } from "./controllers/stripe.controller.js";
+
 import errorHandler from "./middlewares/errorHandler.middleware.js";
 import { env } from "./config/env.js";
 import { Selector } from "./utils/errors.utils.js";
@@ -32,6 +34,8 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
+
+app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), stripeWebhook);
 
 app.use(express.json()); // Para leer los datos del body
 app.use(express.urlencoded({ extended: true })); // Para leer los datos del body en formato urlencode

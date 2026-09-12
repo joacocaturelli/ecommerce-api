@@ -22,6 +22,10 @@ const REQUIRED_VARS = [
   "CLOUDINARY_CLOUD_NAME",
   "CLOUDINARY_API_KEY",
   "CLOUDINARY_API_SECRET",
+  "STRIPE_SECRET_KEY",
+  "STRIPE_PUBLIC_KEY",
+  "STRIPE_WEBHOOK_SECRET",
+  "FRONTEND_URL",
 ];
 
 const errors = [];
@@ -50,7 +54,6 @@ if (process.env.MONGO_URI && !process.env.MONGO_URI.startsWith("mongodb")) {
 
 const validEnvs = ["development", "production", "test"];
 const nodeEnv = process.env.NODE_ENV || "development";
-
 if (!validEnvs.includes(nodeEnv)) {
   errors.push(`NODE_ENV debe ser uno de: ${validEnvs.join(", ")} (recibido: "${nodeEnv}")`);
 }
@@ -83,4 +86,8 @@ export const env = {
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
   CORS_ORIGINS: corsOrigins,
+  STRIPE_PUBLIC_KEY: process.env.STRIPE_PUBLIC_KEY,
+  STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+  STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+  FRONTEND_URL: process.env.FRONTEND_URL,
 };
