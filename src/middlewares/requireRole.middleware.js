@@ -10,7 +10,5 @@ export const requiredRole = (req, res, next) => {
   // Si lo tiene imprimimos por consola su actividad
   const now = new Date().toISOString();
 
-  console.log(`[${now}] ${req.method} ${req.url}`);
-
   next();
 };

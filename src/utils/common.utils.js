@@ -30,24 +30,20 @@ export const authLimiter = rateLimit({
 
 export const needNumber = (value, { integer = false } = {}) => {
   if (value === undefined || value === null || value === "") {
-    console.log("needNumber");
     return { ok: false };
   }
 
   const number = Number(value);
 
   if (Number.isNaN(number)) {
-    console.log("needNumber");
     return { ok: false };
   }
 
   if (number < 0) {
-    console.log("needNumber");
     return { ok: false };
   }
 
   if (integer && !Number.isInteger(number)) {
-    console.log("needNumber");
     return { ok: false };
   }
 

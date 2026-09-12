@@ -6,7 +6,6 @@ export const obligatory = (fields) => {
       const value = req.body[field];
 
       if (value === undefined || value === null || value === "" || !value) {
-        console.log("obligarory middleware");
         return next(Selector.BAD_INPUT);
       }
     }
@@ -35,7 +34,6 @@ export const necessaryOne = (fields, options = {}) => {
     }
 
     if (!hasValue) {
-      console.log("necessaryOne middleware");
       return next(Selector.MISSING_INPUT);
     }
 
@@ -47,7 +45,10 @@ export const Register = (req, res, next) => {
   const { email, password } = req.body;
 
   if (typeof password !== "string" || password.length < 8) {
-    console.log("Register middleware");
+    return next(Selector.BAD_INPUT);
+  }
+
+  if (typeof email !== "string") {
     return next(Selector.BAD_INPUT);
   }
 
