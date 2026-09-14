@@ -1,205 +1,134 @@
-# API E-commerce Backend
+# 🛍️ E-Commerce Backend API
 
-API REST desarrollada con **Node.js, Express y Prisma ORM** como backend para un sistema de e-commerce. La arquitectura está separada por capas (controllers, services, routes, middlewares y utils), con integración a múltiples bases de datos y servicios externos.
+Una **API REST completa y profesional** para un sistema de e-commerce desarrollada con **Node.js, Express y Prisma ORM**. Arquitectura modular en capas con autenticación JWT, gestión de múltiples bases de datos y documentación interactiva con Swagger.
 
----
-
-## Descripción
-
-La aplicación implementa un backend completo para un e-commerce con gestión de usuarios, autenticación, productos, carrito de compras, wishlist, órdenes y reseñas. Incluye documentación completa de API con Swagger/OpenAPI 3.0.
-
-**Características principales:**
-
-- Autenticación segura con JWT en cookies HTTP-only
-- Control de roles de usuario (USER, ADMIN)
-- Gestión completa de productos con imágenes
-- Carrito de compras persistente con estados
-- Sistema de wishlist con MongoDB
-- Sistema de reviews/reseñas con validación
-- Sistema de órdenes con checkout
-- Documentación interactiva con Swagger
-- Integración con Cloudinary para almacenamiento de imágenes
-- Prisma ORM para PostgreSQL/Supabase
-- MongoDB para modelos auxiliares (reviews, wishlist, logs)
-- Rate limiting en endpoints críticos
-- Validación centralizada de datos
-- Manejo robusto de errores
+**Documentación Swagger en vivo:**  
+👉 [https://backend-e-commerce-keoz.onrender.com/api/docs](https://backend-e-commerce-keoz.onrender.com/api/docs)
 
 ---
 
-## Funcionalidades
+## ✨ Características Principales
 
-### Autenticación & Usuarios
-
-- ✅ Registro de usuarios con validación
-- ✅ Login con generación de JWT (HTTP-only cookie)
-- ✅ Middleware de autenticación por token
-- ✅ Control de acceso por roles (USER, ADMIN)
-- ✅ Obtención de perfil de usuario
-- ✅ Actualización de rol (solo ADMIN)
-- ✅ Rate limiting en endpoints de auth
-
-### Gestión de Productos
-
-- ✅ Crear productos (solo ADMIN)
-- ✅ Listado de productos
-- ✅ Obtener detalle de producto
-- ✅ Actualizar producto (solo ADMIN)
-- ✅ Eliminar producto (solo ADMIN)
-- ✅ Subida de imágenes mediante Cloudinary
-- ✅ Validación de campos obligatorios
-
-### Carrito de Compras
-
-- ✅ Obtener carrito activo (auto-crea si no existe)
-- ✅ Obtener carrito por ID
-- ✅ Añadir productos al carrito
-- ✅ Actualizar cantidad de producto
-- ✅ Eliminar producto del carrito
-- ✅ Vaciar carrito
-- ✅ Estados del carrito: ACTIVE, CHECKED_OUT
-
-### Wishlist (MongoDB)
-
-- ✅ Añadir producto a favoritos
-- ✅ Eliminar producto de favoritos
-- ✅ Listar productos guardados por usuario
-- ✅ Verificar si producto está en favoritos
-
-### Reseñas/Reviews (MongoDB)
-
-- ✅ Crear reseña de producto
-- ✅ Obtener reseñas del usuario
-- ✅ Obtener reseñas de un producto
-- ✅ Actualizar reseña
-- ✅ Eliminar reseña
-- ✅ Validación: ratings 1-5, un usuario una reseña por producto
-
-### Órdenes
-
-- ✅ Crear orden desde carrito
-- ✅ Obtener órdenes del usuario
-- ✅ Obtener detalle de orden
-- ✅ Historial de compras
-
-### Seguridad & Middlewares
-
-- ✅ Autenticación con JWT en cookies
-- ✅ Validación centralizada de requests
-- ✅ Manejo robusto de errores HTTP
-- ✅ Control de roles por endpoint
-- ✅ Rate limiting global y por endpoint
-- ✅ Helmet para headers de seguridad
-- ✅ CORS configurado para desarrollo y producción
+- ✅ **Autenticación segura** - JWT en cookies HTTP-only
+- ✅ **Control de roles** - USER y ADMIN con permisos granulares
+- ✅ **Gestión de productos** - CRUD completo con imágenes en Cloudinary
+- ✅ **Carrito de compras** - Persistencia en BD con múltiples estados
+- ✅ **Sistema de órdenes** - Checkout y historial de compras
+- ✅ **Reseñas de productos** - Validación de ratings y restricción de usuario
+- ✅ **Wishlist/Favoritos** - Guardado persistente de productos favoritos
+- ✅ **Integración Stripe** - Pagos seguros con webhooks
+- ✅ **Documentación OpenAPI 3.0** - 30+ endpoints documentados interactivamente
+- ✅ **Seguridad robusta** - Helmet, CORS dinámico, rate limiting, bcrypt
+- ✅ **Manejo de errores** - Manejador centralizado con códigos personalizados
+- ✅ **Escalabilidad** - Arquitectura desacoplada y modular
 
 ---
 
-## Tecnologías Utilizadas
+## 🏗️ Arquitectura
 
-### Core
+### Patrón de Capas
 
-- **Node.js** - Runtime de JavaScript
-- **Express.js** - Framework web
+```
+HTTP Request
+    ↓
+Routes (Enrutamiento)
+    ↓
+Middlewares (Auth, Validación)
+    ↓
+Controllers (Orquestación)
+    ↓
+Services (Lógica de Negocio)
+    ↓
+Database Layer (Prisma/MongoDB)
+    ↓
+JSON Response
+```
 
-### Bases de Datos
-
-- **Prisma ORM** - ORM para PostgreSQL/Supabase
-- **MongoDB** - Base de datos NoSQL (reviews, wishlist, logs)
-- **PostgreSQL** - Base de datos relacional principal
-
-### Autenticación & Seguridad
-
-- **JWT** - JSON Web Tokens
-- **bcrypt** - Hash de contraseñas
-- **cookie-parser** - Manejo de cookies
-- **helmet** - Headers de seguridad
-- **express-rate-limit** - Rate limiting
-
-### Almacenamiento & Upload
-
-- **Cloudinary** - Almacenamiento de imágenes en la nube
-- **Multer** - Middleware para upload de archivos
-
-### Documentación & Testing
-
-- **Swagger/OpenAPI 3.0** - Documentación interactiva
-- **swagger-jsdoc** - Generación de specs OpenAPI desde comentarios
-- **swagger-ui-express** - Interfaz web de Swagger
-- **Jest** - Framework de testing
+| Capa            | Función                                         |
+| --------------- | ----------------------------------------------- |
+| **Routes**      | Definición de endpoints y métodos HTTP          |
+| **Middlewares** | Autenticación, validación, autorización         |
+| **Controllers** | Orquestación de request/response                |
+| **Services**    | Lógica de negocio, transacciones y validaciones |
+| **Models**      | Esquemas de datos (Prisma/MongoDB)              |
+| **Utils**       | Funciones auxiliares reutilizables              |
+| **Config**      | Configuración de servicios externos             |
 
 ---
 
-## Estructura del Proyecto
+## 📊 Estructura del Proyecto
 
-```bash
-projectBackEnd/
+```
+projectBackend/
+│
 ├── prisma/
 │   ├── migrations/
-│   │   └── 20260729164906_init/
-│   │       └── migration.sql
-│   ├── migration_lock.toml
-│   └── schema.prisma
+│   └── schema.prisma                        # Esquema principal de datos
 │
 ├── src/
-│   ├── config/
-│   │   ├── cloudinary.js      # Configuración de Cloudinary
-│   │   ├── env.js             # Variables de entorno
-│   │   ├── mongo.js           # Conexión MongoDB
-│   │   ├── multer.js          # Configuración de upload
-│   │   ├── prismaClient.js    # Cliente Prisma
-│   │   └── swagger.js         # Configuración OpenAPI 3.0
 │   │
-│   ├── controllers/
-│   │   ├── auth.controller.js       # Registro, login, logout
-│   │   ├── cart.controller.js       # Gestión de carrito
-│   │   ├── order.controller.js      # Órdenes y checkout
-│   │   ├── products.controller.js   # Productos
-│   │   ├── review.controllers.js    # Reseñas
-│   │   ├── server.controller.js     # Health checks
-│   │   ├── users.controller.js      # Usuarios
-│   │   └── wishlist.controller.js   # Favoritos
+│   ├── config/                              # Configuraciones externas
+│   │   ├── cloudinary.js                    # Almacenamiento de imágenes
+│   │   ├── env.js                           # Validación variables de entorno
+│   │   ├── mongo.js                         # Conexión MongoDB
+│   │   ├── multer.js                        # Configuración de uploads
+│   │   ├── prismaClient.js                  # Cliente Prisma singleton
+│   │   ├── stripe.js                        # Configuración de Stripe
+│   │   └── swagger.js                       # Documentación OpenAPI 3.0
 │   │
-│   ├── middlewares/
-│   │   ├── auth.middleware.js       # Autenticación JWT
-│   │   ├── errorHandler.middleware.js # Manejo de errores
-│   │   ├── requireRole.middleware.js  # Control de roles
-│   │   └── validate.middleware.js     # Validación de datos
+│   ├── controllers/                         # Orquestación de requests
+│   │   ├── auth.controller.js               # Registro, login, logout
+│   │   ├── cart.controller.js               # Gestión de carrito
+│   │   ├── order.controller.js              # Órdenes y checkout
+│   │   ├── products.controller.js           # Productos (CRUD)
+│   │   ├── review.controllers.js            # Reviews/Reseñas
+│   │   ├── server.controller.js             # Health checks
+│   │   ├── stripe.controller.js             # Webhooks Stripe
+│   │   ├── users.controller.js              # Gestión de usuarios
+│   │   └── wishlist.controller.js           # Favoritos/Wishlist
 │   │
-│   ├── models/
-│   │   ├── adminLog.model.js    # Logs de admin (MongoDB)
-│   │   ├── review.model.js      # Modelo de reviews (MongoDB)
-│   │   └── wishlist.model.js    # Modelo de wishlist (MongoDB)
+│   ├── middlewares/                         # Middlewares Express
+│   │   ├── auth.middleware.js               # Autenticación JWT
+│   │   ├── errorHandler.middleware.js       # Manejo centralizado de errores
+│   │   ├── requireRole.middleware.js        # Control de roles
+│   │   └── validate.middleware.js           # Validación de datos
 │   │
-│   ├── routes/
-│   │   ├── auth.routes.js       # Rutas de autenticación
-│   │   ├── cart.routes.js       # Rutas de carrito
-│   │   ├── index.routes.js      # Rutas raíz
-│   │   ├── orders.routes.js     # Rutas de órdenes
-│   │   ├── products.routes.js   # Rutas de productos
-│   │   ├── review.routes.js     # Rutas de reseñas
-│   │   ├── users.routes.js      # Rutas de usuarios
-│   │   └── wishlist.routes.js   # Rutas de favoritos
+│   ├── models/                              # Esquemas MongoDB
+│   │   ├── adminLog.model.js                # Logs de administrador
+│   │   ├── review.model.js                  # Modelo de reviews
+│   │   └── wishlist.model.js                # Modelo de wishlist
 │   │
-│   ├── services/
-│   │   ├── auth.service.js        # Lógica de autenticación
-│   │   ├── cart.service.js        # Lógica de carrito
-│   │   ├── cloudinary.service.js  # Integración Cloudinary
-│   │   ├── order.service.js       # Lógica de órdenes
-│   │   ├── products.service.js    # Lógica de productos
-│   │   ├── review.service.js      # Lógica de reseñas
-│   │   ├── users.service.js       # Lógica de usuarios
-│   │   └── wishlist.service.js    # Lógica de wishlist
+│   ├── routes/                              # Definición de endpoints
+│   │   ├── auth.routes.js                   # /api/auth/*
+│   │   ├── cart.routes.js                   # /api/cart/*
+│   │   ├── index.routes.js                  # Rutas raíz
+│   │   ├── orders.routes.js                 # /api/orders/*
+│   │   ├── products.routes.js               # /api/products/*
+│   │   ├── review.routes.js                 # /api/reviews/*
+│   │   ├── users.routes.js                  # /api/users/*
+│   │   └── wishlist.routes.js               # /api/wishlist/*
 │   │
-│   ├── utils/
-│   │   ├── common.utils.js    # Funciones auxiliares comunes
-│   │   └── errors.utils.js    # Manejador de errores
+│   ├── services/                            # Lógica de negocio
+│   │   ├── auth.service.js                  # Autenticación
+│   │   ├── cart.service.js                  # Carrito
+│   │   ├── cloudinary.service.js            # Integración Cloudinary
+│   │   ├── order.service.js                 # Órdenes
+│   │   ├── products.service.js              # Productos
+│   │   ├── review.service.js                # Reviews
+│   │   ├── stripe.service.js                # Pagos Stripe
+│   │   ├── users.service.js                 # Usuarios
+│   │   └── wishlist.service.js              # Wishlist
 │   │
-│   ├── app.js          # Configuración de Express
-│   └── server.js       # Punto de entrada
+│   ├── utils/                               # Utilidades
+│   │   ├── common.utils.js                  # Funciones comunes
+│   │   └── errors.utils.js                  # Clases de error personalizadas
+│   │
+│   ├── app.js                               # Configuración Express
+│   └── server.js                            # Punto de entrada
 │
-├── .gitignore
-├── .env.example        # Variables de entorno de ejemplo
-├── package.json
+├── .env.example                             # Ejemplo de variables
+├── .gitignore                               # Git ignore
+├── package.json                             # Dependencias
 ├── package-lock.json
 ├── prisma.config.js
 └── README.md
@@ -207,425 +136,518 @@ projectBackEnd/
 
 ---
 
-## Arquitectura
+## 🗄️ Modelos de Datos
 
-El proyecto sigue una **arquitectura en capas** bien definida:
+### Prisma (PostgreSQL)
 
+```prisma
+User
+├── id (UUID, PK)
+├── name
+├── email (UNIQUE)
+├── password (hash)
+├── role (enum: USER, ADMIN)
+├── createdAt, updatedAt
+└── relations: carts[], orders[]
+
+Product
+├── id (UUID, PK)
+├── name
+├── description
+├── price (Decimal)
+├── stock
+├── imageUrl
+├── isActive
+├── createdAt, updatedAt
+└── relations: cartItems[], orderItems[]
+
+Cart
+├── id (UUID, PK)
+├── userId (FK)
+├── status (enum: ACTIVE, CHECKED_OUT)
+├── createdAt, updatedAt
+└── relations: user, items[], orders[]
+
+CartItem
+├── id (UUID, PK)
+├── cartId (FK)
+├── productId (FK)
+├── quantity
+└── unique(cartId, productId)
+
+Order
+├── id (UUID, PK)
+├── userId (FK)
+├── cartId (FK)
+├── total (Decimal)
+├── status (enum: PENDING, PAID, CANCELLED)
+├── stripeSessionId
+├── createdAt, updatedAt
+└── relations: user, cart, items[]
+
+OrderItem
+├── id (UUID, PK)
+├── orderId (FK)
+├── productId (FK)
+├── productName
+├── quantity
+└── price (Decimal)
 ```
-Request HTTP
-    ↓
-Routes (routing y parámetros)
-    ↓
-Middlewares (autenticación, validación)
-    ↓
-Controllers (orquestación)
-    ↓
-Services (lógica de negocio)
-    ↓
-Database (Prisma/MongoDB)
-    ↓
-Response JSON
+
+### MongoDB
+
+```javascript
+Review
+├── _id
+├── userId
+├── productId
+├── rating (1-5)
+├── title
+├── comment
+├── createdAt, updatedAt
+└── unique(userId, productId)
+
+Wishlist
+├── _id
+├── userId
+├── productId
+├── createdAt
+
+AdminLog
+├── _id
+├── userId
+├── action
+├── description
+├── timestamp
 ```
-
-### Capas del Proyecto
-
-| Capa            | Responsabilidad                         |
-| --------------- | --------------------------------------- |
-| **Routes**      | Definición de endpoints y métodos HTTP  |
-| **Middlewares** | Autenticación, validación, autorización |
-| **Controllers** | Orquestación de requests/responses      |
-| **Services**    | Lógica de negocio y transacciones       |
-| **Utils**       | Funciones auxiliares reutilizables      |
-| **Config**      | Configuración de servicios externos     |
 
 ---
 
-## Variables de Entorno
+## 🛠️ Tecnologías Utilizadas
 
-Crear un archivo `.env` en la raíz del proyecto. Puedes usar `.env.example` como referencia.
+### Core
 
-### Variables Obligatorias
+- **Node.js** - Runtime de JavaScript
+- **Express.js 5.2.1** - Framework web
+
+### Bases de Datos
+
+- **Prisma ORM 7.8.0** - PostgreSQL
+- **MongoDB 9.10.0** - NoSQL (reviews, wishlist, logs)
+- **PostgreSQL** - Base de datos relacional principal
+
+### Autenticación & Seguridad
+
+- **JWT 9.0.3** - Token-based authentication
+- **bcrypt 6.0.0** - Password hashing
+- **helmet 8.2.0** - HTTP security headers
+- **express-rate-limit 8.5.2** - Rate limiting
+- **cors 2.8.6** - CORS configurado
+
+### Almacenamiento & Upload
+
+- **Cloudinary 2.10.0** - Cloud storage para imágenes
+- **Multer 2.3.0** - Middleware para uploads
+
+### Pagos
+
+- **Stripe 22.6.2** - Payment processing
+
+### Documentación
+
+- **swagger-jsdoc 6.3.0** - OpenAPI spec generator
+- **swagger-ui-express 5.0.1** - Interactive docs
+
+### Testing
+
+- **Jest 30.4.2** - Testing framework
+
+---
+
+## 📦 Instalación
+
+### Requisitos Previos
+
+- **Node.js** ≥ 18.x
+- **npm** ≥ 9.x
+- **PostgreSQL** ≥ 12 (o Supabase)
+- **MongoDB** con acceso remoto
+- Cuentas en: **Stripe**, **Cloudinary**
+
+### Pasos de Instalación
+
+1. **Clonar el repositorio**
+
+   ```bash
+   git clone https://github.com/joacocaturelli/backend-e-commerce.git
+   cd projectBackend
+   ```
+
+2. **Instalar dependencias**
+
+   ```bash
+   npm install
+   ```
+
+3. **Configurar variables de entorno**
+
+   ```bash
+   cp .env.example .env
+   # Editar .env con tus credenciales
+   ```
+
+4. **Ejecutar migraciones de BD**
+
+   ```bash
+   npx prisma migrate dev
+   ```
+
+5. **Iniciar servidor**
+
+   ```bash
+   # Desarrollo con hot-reload
+   npm run dev
+
+   # Producción
+   npm start
+   ```
+
+El servidor estará disponible en `http://localhost:3000`
+
+---
+
+## 🔐 Variables de Entorno
+
+Crear `.env` basado en `.env.example`:
+
+### Servidor
 
 ```bash
-# =====================================================================
-# SERVIDOR
-# =====================================================================
 PORT=3000
 NODE_ENV="development"
+```
 
-# =====================================================================
-# BASE DE DATOS - PostgreSQL (Prisma)
-# =====================================================================
-DATABASE_URL="postgresql://usuario:contraseña@localhost:5432/ecommerce"
-DIRECT_URL="postgresql://usuario:contraseña@db.supabase.co:5432/postgres"
+### PostgreSQL (Prisma)
 
-# =====================================================================
-# BASE DE DATOS - MongoDB
-# =====================================================================
-MONGO_URI="mongodb+srv://usuario:contraseña@cluster.mongodb.net/ecommerce"
+```bash
+DATABASE_URL="postgresql://usuario:pass@localhost:5432/ecommerce"
+DIRECT_URL="postgresql://usuario:pass@db.supabase.co:5432/postgres"
+```
 
-# =====================================================================
-# AUTENTICACIÓN - JWT
-# =====================================================================
-JWT_SECRET="tu-secreto-super-secreto-y-seguro-aqui"
+### MongoDB
 
-# =====================================================================
-# ALMACENAMIENTO - Cloudinary
-# =====================================================================
+```bash
+MONGO_URI="mongodb+srv://usuario:pass@cluster.mongodb.net/ecommerce"
+```
+
+### JWT
+
+```bash
+JWT_SECRET="tu-secreto-super-seguro-cambiar-en-produccion"
+JWT_EXPIRE="7d"
+```
+
+### Cloudinary
+
+```bash
 CLOUDINARY_CLOUD_NAME="tu-cloud-name"
 CLOUDINARY_API_KEY="tu-api-key"
 CLOUDINARY_API_SECRET="tu-api-secret"
-
-# =====================================================================
-# CORS - Orígenes permitidos (OPCIONAL, separados por comas)
-# =====================================================================
-# Por defecto: http://localhost:3000, http://127.0.0.1:3000,
-#              http://localhost:5173, http://127.0.0.1:5173
-# Para personalizar:
-# CORS_ORIGINS="http://localhost:5173,http://localhost:3000,https://tu-dominio.com"
 ```
 
-### Detalles de Configuración
+### Stripe
 
-| Variable                  | Descripción                                     | Ejemplo                                          |
-| ------------------------- | ----------------------------------------------- | ------------------------------------------------ |
-| **PORT**                  | Puerto del servidor                             | `3000`                                           |
-| **NODE_ENV**              | Entorno (development, production, test)         | `development`                                    |
-| **DATABASE_URL**          | URL PostgreSQL para desarrollo                  | `postgresql://user:pass@localhost/db`            |
-| **DIRECT_URL**            | URL PostgreSQL para producción (Supabase)       | `postgresql://user:pass@db.supabase.co/db`       |
-| **MONGO_URI**             | URI MongoDB (Atlas o local)                     | `mongodb+srv://user:pass@cluster.mongodb.net/db` |
-| **JWT_SECRET**            | Secreto para firmar tokens (mín. 32 caracteres) | `supersecretkey123456789abcdefghij`              |
-| **CLOUDINARY_CLOUD_NAME** | Nombre de cuenta Cloudinary                     | `tu-cloud`                                       |
-| **CLOUDINARY_API_KEY**    | API Key de Cloudinary                           | `123456789`                                      |
-| **CLOUDINARY_API_SECRET** | API Secret de Cloudinary                        | `abc123def456`                                   |
-| **CORS_ORIGINS**          | URLs permitidas (opcional, separadas por comas) | `http://localhost:5173,https://example.com`      |
+```bash
+STRIPE_PUBLIC_KEY="pk_live_..."
+STRIPE_SECRET_KEY="sk_live_..."
+STRIPE_WEBHOOK_SECRET="whsec_..."
+```
+
+### CORS (Opcional)
+
+```bash
+CORS_ORIGINS="http://localhost:5173,http://localhost:3000,https://tuapp.com"
+```
 
 ---
 
-## Instalación y Configuración
+## 📚 API Endpoints
 
-### 1. Clonar el repositorio
+### 🔑 Autenticación (`/api/auth`)
 
-```bash
-git clone https://github.com/joacocaturelli/projectBackEnd.git
+```http
+POST /api/auth/register              # Registrar usuario
+POST /api/auth/login                 # Iniciar sesión
+POST /api/auth/logout                # Cerrar sesión
 ```
 
-### 2. Instalar dependencias
+### 📦 Productos (`/api/products`)
 
-```bash
-npm install
+```http
+GET    /api/products                 # Listar todos
+GET    /api/products/{id}            # Detalle
+POST   /api/products                 # Crear [ADMIN]
+PUT    /api/products/{id}            # Actualizar [ADMIN]
+DELETE /api/products/{id}            # Eliminar [ADMIN]
 ```
 
-### 3. Configurar variables de entorno
+### 🛒 Carrito (`/api/cart`)
 
-```bash
-cp .env.example .env
-# Editar .env con tus valores
+```http
+GET    /api/cart                     # Obtener carrito activo (auto-crea)
+GET    /api/cart/{cartId}            # Obtener por ID
+POST   /api/cart/items               # Añadir producto
+PUT    /api/cart/items               # Actualizar cantidad
+DELETE /api/cart/items               # Eliminar producto
+POST   /api/cart/checkout            # Checkout (crear orden)
+DELETE /api/cart                     # Vaciar carrito
 ```
 
-### 4. Ejecutar migraciones de Prisma
+### 📝 Reseñas (`/api/reviews`)
 
-```bash
-# Migrar base de datos
-npx prisma migrate dev
-
-# O resetear DB (CUIDADO - elimina datos)
-npx prisma migrate reset
+```http
+GET    /api/reviews                  # Mis reseñas
+GET    /api/products/{productId}/reviews       # Del producto
+POST   /api/products/{productId}/reviews       # Crear [AUTH]
+PUT    /api/reviews/{productId}     # Actualizar [AUTH]
+DELETE /api/reviews/{productId}     # Eliminar [AUTH]
 ```
 
-### 5. Iniciar el servidor
+### ❤️ Wishlist (`/api/wishlist`)
 
-```bash
-# Modo desarrollo (con hot reload)
-npm run dev
-
-# Modo producción
-npm start
+```http
+GET    /api/wishlist                 # Obtener lista [AUTH]
+POST   /api/wishlist/add/{productId} # Añadir [AUTH]
+DELETE /api/wishlist/{productId}     # Eliminar [AUTH]
 ```
 
-El servidor estará disponible en: `http://localhost:3000`
+### 📦 Órdenes (`/api/orders`)
+
+```http
+GET    /api/orders                   # Mis órdenes [AUTH]
+GET    /api/orders/{orderId}         # Detalle [AUTH]
+```
+
+### 👤 Usuarios (`/api/users`)
+
+```http
+GET    /api/users/profile            # Perfil autenticado [AUTH]
+GET    /api/users                    # Todos [ADMIN]
+GET    /api/users/{userId}           # Detalle [ADMIN]
+PUT    /api/users/{userId}           # Actualizar rol [ADMIN]
+DELETE /api/users/{userId}           # Eliminar [ADMIN]
+```
+
+### 🏥 Server
+
+```http
+GET    /                             # Estado
+GET    /health                       # Health check
+```
 
 ---
 
-## Documentación de la API
+## 📤 Ejemplo de Respuestas
 
-### Swagger/OpenAPI
-
-La API está completamente documentada con **Swagger/OpenAPI 3.0**.
-
-Una vez iniciado el servidor, acceder a:
-
-```
-http://localhost:3000/api/docs
-```
-
-#### Características de la Documentación:
-
-- ✅ **30+ endpoints documentados** - Todos los endpoints con descripción completa
-- ✅ **Schemas reutilizables** - 18 esquemas OpenAPI definidos
-- ✅ **Seguridad documentada** - Cookie authentication con JWT
-- ✅ **Ejemplos realistas** - Valores de ejemplo en todos los campos
-- ✅ **Códigos HTTP completos** - 200, 201, 400, 401, 403, 404, 409, 429, 500
-- ✅ **Validaciones especificadas** - Restricciones y campos obligatorios
-
-### Endpoints Disponibles
-
-#### Autenticación
-
-- `POST /api/auth/register` - Registrar nuevo usuario
-- `POST /api/auth/login` - Iniciar sesión
-- `POST /api/auth/logout` - Cerrar sesión
-
-#### Productos
-
-- `GET /api/products` - Listar todos
-- `GET /api/products/{id}` - Detalle
-- `POST /api/products` - Crear (ADMIN)
-- `PUT /api/products/{id}` - Actualizar (ADMIN)
-- `DELETE /api/products/{id}` - Eliminar (ADMIN)
-
-#### Carrito
-
-- `GET /api/cart` - Obtener carrito del usuario
-- `GET /api/cart/{cartId}` - Obtener carrito por ID
-- `POST /api/cart/items` - Añadir producto
-- `DELETE /api/cart/items` - Eliminar producto
-- `POST /api/cart/checkout` - Hacer el checkout (Crear una orden)
-
-#### Reviews
-
-- `GET /api/reviews` - Mis reseñas
-- `GET /api/products/{productId}/reviews` - Reseñas de producto
-- `POST /api/products/{productId}/reviews` - Crear reseña
-- `PUT /api/reviews/{productId}` - Actualizar reseña
-- `DELETE /api/reviews/{productId}` - Eliminar reseña
-
-#### Wishlist
-
-- `GET /api/wishlist` - Obtener la lista de favoritos
-- `POST /api/wishlist/add/{productId}` - Añadir a favoritos
-- `DELETE /api/wishlist/{productId}` - Eliminar de favoritos
-
-#### Órdenes
-
-- `GET /api/orders` - Obtener mis órdenes
-- `GET /api/orders/{orderId}` - Detalle de orden
-
-#### Usuarios
-
-- `GET /api/users/profile` - Obtener perfil de usuario autenticado
-- `GET /api/users` - Obtener todos los usuarios (ADMIN)
-- `GET /api/users/{userId}` - Obtener usuario (ADMIN)
-- `PUT /api/users/{userId}` - Actualizar rol (ADMIN)
-- `DELETE /api/users/{userId}` - Eliminar usuario (ADMIN)
-
-#### Server
-
-- `GET /` - Estado del servidor
-- `GET /health` - Salud del servidor
-
----
-
-## Patrones y Convenciones
-
-### Respuestas API
-
-Todas las respuestas siguen el patrón:
-
-**Éxito (2xx):**
+### ✅ Éxito (2xx)
 
 ```json
 {
   "ok": true,
   "data": {
-    /* objeto o array */
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "email": "usuario@example.com",
+    "name": "Juan Pérez",
+    "role": "USER",
+    "createdAt": "2026-09-12T20:18:00.000Z"
   }
 }
 ```
 
-**Error (4xx, 5xx):**
+### ❌ Error (4xx, 5xx)
 
 ```json
 {
   "ok": false,
-  "error": "Descripción del error"
+  "error": "El email ya está registrado",
+  "code": "CONFLICT"
 }
 ```
 
-### Códigos de Error
+---
 
-| Código | Tipo          | Significado                          |
-| ------ | ------------- | ------------------------------------ |
-| 400    | BAD_INPUT     | Datos de entrada incorrectos         |
-| 400    | MISSING_INPUT | Faltan datos obligatorios            |
-| 401    | WRONG_CRED    | Email o contraseña incorrectos       |
-| 401    | NO_TOKEN      | Sin sesión o token inválido/expirado |
-| 401    | UNAUTHORIZED  | Usuario sin rol requerido            |
-| 404    | NOT_FOUND     | Recurso no encontrado                |
-| 409    | CONFLICT      | Recurso ya existe                    |
-| 429    | RATE_LIMIT    | Demasiadas peticiones                |
-| 500    | BAD_ERROR     | Error interno del servidor           |
+## ⚠️ Códigos de Error
 
-### Validaciones
-
-- Email válido y único
-- Contraseña mínimo 8 caracteres
-- Ratings 1-5 (en reviews)
-- Stock no negativo
-- Un usuario una reseña por producto
-- Autenticación requerida en rutas protegidas
+| Código HTTP | Código Interno | Significado                       |
+| ----------- | -------------- | --------------------------------- |
+| 400         | BAD_INPUT      | Datos de entrada incorrectos      |
+| 400         | MISSING_INPUT  | Faltan campos obligatorios        |
+| 401         | WRONG_CRED     | Email o contraseña incorrectos    |
+| 401         | NO_TOKEN       | Token inválido/expirado o ausente |
+| 401         | UNAUTHORIZED   | Usuario sin rol requerido         |
+| 404         | NOT_FOUND      | Recurso no encontrado             |
+| 409         | CONFLICT       | Recurso duplicado/conflicto       |
+| 429         | RATE_LIMIT     | Demasiadas peticiones             |
+| 500         | BAD_ERROR      | Error interno del servidor        |
 
 ---
 
-## Despliegue
+## ✔️ Validaciones
 
-### Render (Producción)
-
-El proyecto se encuentra desplegado en **Render**:
-
-👉 **[https://backend-e-commerce-keoz.onrender.com](https://backend-e-commerce-keoz.onrender.com)**
-
-Documentación Swagger en producción:
-
-👉 **[https://backend-e-commerce-keoz.onrender.com/api/docs](https://backend-e-commerce-keoz.onrender.com/api/docs)**
-
-### Pasos para desplegar
-
-1. Hacer push a rama main/deploy
-2. Render se conecta automáticamente con el repositorio
-3. Las migraciones se ejecutan automáticamente
-4. El servidor se reinicia con los cambios
+- ✅ Email válido y único
+- ✅ Contraseña mínimo 8 caracteres
+- ✅ Ratings 1-5 en reviews
+- ✅ Stock no negativo
+- ✅ Un usuario, una reseña por producto
+- ✅ Autenticación requerida en rutas protegidas
+- ✅ Roles granulares por endpoint
 
 ---
 
-## Seguridad
+## 🔒 Seguridad
 
 ### Medidas Implementadas
 
-- ✅ JWT en cookies HTTP-only (no accesible por JavaScript)
-- ✅ Helmet para headers de seguridad
-- ✅ CORS configurado para dominios específicos
-- ✅ Password hashing con bcrypt
-- ✅ Rate limiting en endpoints críticos
-- ✅ Validación centralizada de inputs
-- ✅ Control de roles por endpoint
-- ✅ Variables de entorno para secretos
+- ✅ **JWT en cookies HTTP-only** - No accesible por JavaScript
+- ✅ **Helmet** - Headers de seguridad HTTP
+- ✅ **CORS dinámico** - Orígenes configurables por env
+- ✅ **Password hashing** - bcrypt con salts
+- ✅ **Rate limiting** - Prevención de brute-force
+- ✅ **Validación centralizada** - Filtrado temprano de inputs
+- ✅ **Control de roles** - Autorización por endpoint
+- ✅ **Variables de entorno** - Secretos protegidos
 
-### CORS Dinámico
-
-CORS está configurado de forma flexible mediante variable de entorno `CORS_ORIGINS`:
-
-**Valores por defecto (desarrollo):**
+### Configuración CORS
 
 ```javascript
-[
-  "http://localhost:3000", // Backend local
-  "http://127.0.0.1:3000", // Backend local (IP)
-  "http://localhost:5173", // Frontend Vite local
-  "http://127.0.0.1:5173", // Frontend Vite local (IP)
-];
+// Desarrollo (por defecto)
+["http://localhost:3000", "http://localhost:5173"];
+
+// Personalizar en .env
+CORS_ORIGINS = "http://localhost:5173,https://tuapp.com";
 ```
-
-**Personalizar en `.env`:**
-
-```bash
-# Para desarrollo (por defecto, puede omitirse)
-CORS_ORIGINS="http://localhost:5173,http://localhost:3000"
-
-# Para producción
-CORS_ORIGINS="https://mi-app.com,https://www.mi-app.com"
-
-# Múltiples orígenes (desarrollo + producción)
-CORS_ORIGINS="http://localhost:5173,http://localhost:3000,https://mi-app.com"
-```
-
-**Sin variable `CORS_ORIGINS`:** Usa los valores por defecto de desarrollo.
 
 ---
 
-## Manejo de Errores
+## 🚀 Despliegue
 
-El proyecto implementa un manejador centralizado de errores con una estructura consistente:
+### Production URL
 
-### ErrorHandler Middleware
+**Render:** https://backend-e-commerce-keoz.onrender.com
 
-- Captura todas las excepciones
-- Mapea códigos de error internos a HTTP
-- Responde con formato JSON standarizado
-- Logs en servidor
+**Swagger:** https://backend-e-commerce-keoz.onrender.com/api/docs
 
-### Tipos de Errores Soportados
+### Pasos para Desplegar
 
-- Errores de validación (400)
-- Errores de autenticación (401)
-- Errores de autorización (403)
-- Errores de recurso no encontrado (404)
-- Errores de conflicto (409)
-- Errores de servidor (500)
+1. Hacer push a rama main/deploy
+2. Render conecta automáticamente
+3. Migraciones se ejecutan automáticamente
+4. Servidor se reinicia
+
+### Checklist Pre-Despliegue
+
+- [ ] Variables de entorno en Render
+- [ ] Migraciones BD ejecutadas
+- [ ] JWT_SECRET actualizado
+- [ ] CORS_ORIGINS configurado
+- [ ] Stripe webhooks activos
 
 ---
 
-## Performance & Scalability
+## 📊 Performance & Escalabilidad
 
 ### Optimizaciones
 
 - Índices en base de datos
-- Lazy loading de relaciones con Prisma
+- Lazy loading de relaciones
 - Caching en variables de entorno
-- Rate limiting en endpoints críticos
-- Validación temprana para fallar rápido
+- Rate limiting estratégico
+- Validación temprana
 
-### Escalabilidad
+### Arquitectura Escalable
 
-- Arquitectura modular y desacoplada
-- Base de datos normalizada (Prisma)
+- Modular y desacoplada
+- BD normalizada
 - Servicios independientes
-- Fácil de agregar nuevas rutas/controllers
+- Fácil agregar nuevas funcionalidades
 
 ---
 
-## Aprendizajes & Lecciones
+## 🧪 Testing
 
-### Backend Development
+```bash
+# Ejecutar tests
+npm test
 
-- Arquitectura backend modular con Express
-- Separación en capas (controllers/services/routes)
-- Prisma ORM para PostgreSQL
-- MongoDB para datos no relacionales
-- Autenticación con JWT y cookies HTTP-only
-- Control de roles y permisos
-
-### API Design
-
-- Diseño de APIs REST profesional
-- Documentación con Swagger/OpenAPI 3.0
-- Manejo centralizado y consistente de errores
-- Validación robusta de inputs
-- Ejemplos realistas en documentación
-
-### DevOps & Deployment
-
-- Variables de entorno sensibles
-- Migraciones de base de datos
-- Despliegue en Render
-- Rate limiting y seguridad
+# Watch mode
+npm run test:watch
+```
 
 ---
 
-## Soporte
+## 📖 Documentación Swagger
 
-Para reportar bugs o solicitar features, crear un issue en el repositorio.
+Acceder a: `http://localhost:3000/api/docs`
+
+Características:
+
+- 30+ endpoints documentados
+- 18 esquemas OpenAPI reutilizables
+- Ejemplos realistas en todos los campos
+- Códigos HTTP completos (200, 201, 400, 401, 403, 404, 409, 429, 500)
+- Seguridad documentada (Cookie Auth con JWT)
 
 ---
 
-## Licencia
+## 🐛 Troubleshooting
 
-Este proyecto está bajo la licencia ISC.
+### Error: "No PG_HOST variable"
+
+```bash
+# Asegurar que DATABASE_URL está en .env
+DATABASE_URL="postgresql://user:pass@localhost:5432/ecommerce"
+```
+
+### Error: "MongoNetworkError"
+
+```bash
+# Verificar MONGO_URI y conectividad
+MONGO_URI="mongodb+srv://user:pass@cluster.mongodb.net/ecommerce"
+```
+
+### CORS bloqueado
+
+```bash
+# Añadir origen a .env
+CORS_ORIGINS="http://localhost:5173,http://localhost:3000"
+```
+
+### Rate limit alcanzado
+
+```bash
+# Esperar o cambiar config en common.utils.js
+```
 
 ---
 
-## Autor
+## 📚 Recursos & Referencias
+
+- [Express.js Documentation](https://expressjs.com/)
+- [Prisma ORM](https://www.prisma.io/)
+- [JWT.io](https://jwt.io/)
+- [Stripe API](https://stripe.com/docs/api)
+- [Cloudinary Upload API](https://cloudinary.com/documentation)
+- [OpenAPI 3.0 Spec](https://spec.openapis.org/oas/v3.0.3)
+- [MongoDB Docs](https://docs.mongodb.com/)
+
+---
+
+## 👨‍💻 Autor
 
 **Joaquín Caturelli**
 
 - GitHub: [@joacocaturelli](https://github.com/joacocaturelli)
+
+---
+
+**Última actualización:** Septiembre 2026
