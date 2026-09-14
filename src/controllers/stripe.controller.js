@@ -1,6 +1,5 @@
 import stripe from "../config/stripe.js";
 import { env } from "../config/env.js";
-import { Selector } from "../utils/errors.utils.js";
 import {
   handleCheckoutSessionCompleted,
   handleCheckoutSessionCancelled,
@@ -15,28 +14,18 @@ export const stripeWebhook = async (req, res, next) => {
     event = stripe.webhooks.constructEvent(req.body, signature, env.STRIPE_WEBHOOK_SECRET);
   } catch (error) {
     console.log("Error verificando webhook de Stripe:", error.message);
-    return next(Selector.BAD_ERROR);
+    return next(error);
   }
 
   try {
     switch (event.type) {
       case "checkout.session.completed": {
-        const result = await handleCheckoutSessionCompleted(event.data.object);
-
-        if (!result.ok) {
-          return next(Selector.BAD_ERROR);
-        }
-
+        await handleCheckoutSessionCompleted(event.data.object);
         break;
       }
 
       case "checkout.session.expired": {
-        const result = await handleCheckoutSessionCancelled(event.data.object);
-
-        if (!result.ok) {
-          return next(Selector.BAD_ERROR);
-        }
-
+        await handleCheckoutSessionCancelled(event.data.object);
         break;
       }
 
@@ -44,15 +33,15 @@ export const stripeWebhook = async (req, res, next) => {
         break;
       }
     }
+
+    return res.json({
+      ok: true,
+      content: {
+        type: event.type,
+      },
+    });
   } catch (error) {
     console.log("Error procesando evento de Stripe:", error.message);
-    return next(Selector.BAD_ERROR);
+    return next(error);
   }
-
-  return res.json({
-    ok: true,
-    content: {
-      type: event.type,
-    },
-  });
 };

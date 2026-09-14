@@ -48,7 +48,7 @@ router.post(
   "/register",
   authLimiter,
   validate.obligatory(["email", "password", "name"]),
-  validate.Register,
+  validate.register,
   authController.registerUser,
 );
 
@@ -133,8 +133,6 @@ router.post(
  *                   example: "Sesion cerrada"
  *       401:
  *         $ref: "#/components/responses/NoTokenError"
- *       429:
- *         $ref: "#/components/responses/TooManyRequests"
  *       500:
  *         $ref: "#/components/responses/ServerError"
  */

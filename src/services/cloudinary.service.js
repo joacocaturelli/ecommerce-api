@@ -23,8 +23,6 @@ export const uploadImage = async (file) => {
     };
   } catch (error) {
     console.log("Error uploading image", error.message);
-    return {
-      ok: false,
-    };
+    throw error;
   }
 };

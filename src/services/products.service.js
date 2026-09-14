@@ -1,21 +1,37 @@
 import prisma from "../config/prismaClient.js";
+import CustomError from "../utils/errors.utils.js";
 import { uploadImage } from "./cloudinary.service.js";
 
-export const getProducts = async (productsIds) => {
+export const getProducts = async (productsIds, includeInactive = false) => {
   try {
+    // Creamos un objeto dinamico para hacer la peticion a prisma
+    const where = {};
+
     // Si productsIds existe (enviados desde wishlist.service) devuelve solo los productos
     // en la wishlist. Si productsIds no existe, trae todos los productos para el catalogo
-    const result = await prisma.product.findMany(productsIds ? { where: { id: { in: productsIds } } } : {});
+    if (productsIds) {
+      where.id = {
+        in: productsIds,
+      };
+    }
+
+    // Si includeInacitve es falso trae solo los productos activos, si es
+    // true tambien trae los productos inactivos (para admins)
+    if (!includeInactive) {
+      where.isActive = true;
+    }
+
+    const result = await prisma.product.findMany({
+      where,
+    });
 
     return {
       ok: true,
       content: result,
     };
   } catch (error) {
-    console.log("Error geting products", error.message);
-    return {
-      ok: false,
-    };
+    console.log("Error getting products", error.message);
+    throw error;
   }
 };
 
@@ -25,7 +41,9 @@ export const getProductById = async (id) => {
       where: { id },
     });
 
-    if (!result) throw new Error("Producto no obtenido desde prisma");
+    if (!result) {
+      throw new CustomError("notFound");
+    }
 
     return {
       ok: true,
@@ -33,23 +51,16 @@ export const getProductById = async (id) => {
     };
   } catch (error) {
     console.log("Error geting product by Id", error.message);
-    return {
-      ok: false,
-    };
+    throw error;
   }
 };
 
 export const createProduct = async (data, file) => {
   try {
-    let imageUrl = data.imageUrl;
+    let imageUrl;
 
     if (file) {
       const imageResult = await uploadImage(file);
-
-      if (!imageResult.ok) {
-        throw new Error("Image upload failed");
-      }
-
       imageUrl = imageResult.content.secure_url;
     }
 
@@ -60,31 +71,22 @@ export const createProduct = async (data, file) => {
       },
     });
 
-    if (!result) throw new Error("Producto no creado desde prisma");
-
     return {
       ok: true,
       content: result,
     };
   } catch (error) {
     console.log("Error creating product", error.message);
-    return {
-      ok: false,
-    };
+    throw error;
   }
 };
 
 export const updateProduct = async (id, data, file) => {
   try {
-    let imageUrl = data.imageUrl;
+    let imageUrl;
 
     if (file) {
       const imageResult = await uploadImage(file);
-
-      if (!imageResult.ok) {
-        throw new Error("Image upload failed");
-      }
-
       imageUrl = imageResult.content.secure_url;
     }
 
@@ -96,54 +98,65 @@ export const updateProduct = async (id, data, file) => {
       },
     });
 
-    if (!result) throw new Error("Producto no actualizado desde prisma");
-
     return {
       ok: true,
       content: result,
     };
   } catch (error) {
-    if (error.code === "P2025") {
-      console.log("Error updating product", error.message);
+    console.log("Error updating product", error.message);
 
-      return {
-        ok: false,
-        error: "Product not found",
-      };
+    if (error.code === "P2025") {
+      throw new CustomError("notFound");
     }
 
-    console.log("Error updating product", error.message);
-    return {
-      ok: false,
-    };
+    throw error;
   }
 };
 
 export const deleteProduct = async (id) => {
   try {
-    const result = await prisma.product.delete({
+    const result = await prisma.product.update({
       where: { id },
+      data: {
+        isActive: false,
+      },
     });
-
-    if (!result) throw new Error("Producto no eliminado desde prisma");
 
     return {
       ok: true,
       content: result,
     };
   } catch (error) {
-    if (error.code === "P2025") {
-      console.log("Error deleting product", error.message);
+    console.log("Error deactivating product", error.message);
 
-      return {
-        ok: false,
-        error: "Product not found",
-      };
+    if (error.code === "P2025") {
+      throw new CustomError("notFound");
     }
 
-    console.log("Error deleting product", error.message);
+    throw error;
+  }
+};
+
+export const restoreProduct = async (id) => {
+  try {
+    const result = await prisma.product.update({
+      where: { id },
+      data: {
+        isActive: true,
+      },
+    });
+
     return {
-      ok: false,
+      ok: true,
+      content: result,
     };
+  } catch (error) {
+    console.log("Error reactivating product", error.message);
+
+    if (error.code === "P2025") {
+      throw new CustomError("notFound");
+    }
+
+    throw error;
   }
 };

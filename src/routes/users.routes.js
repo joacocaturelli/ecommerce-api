@@ -67,6 +67,8 @@ router.get("/me", authMiddleware, userControllers.getProfile);
  *         $ref: "#/components/responses/UnauthorizedError"
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
+ *       500:
+ *         $ref: "#/components/responses/ServerError"
  */
 router.get("/", authMiddleware, requiredRole, userControllers.getUsers);
 

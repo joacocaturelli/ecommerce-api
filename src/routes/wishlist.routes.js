@@ -54,14 +54,17 @@ router.get("/", authMiddleware, wishListController.getWishlistByUser);
  *       - Wishlist
  *     security:
  *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: productId
- *         required: true
- *         description: UUID del producto en Prisma
- *         schema:
- *           type: string
- *           example: "550e8400-e29b-41d4-a716-446655440000"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: ["productId"]
+ *             properties:
+ *               productId:
+ *                 type: string
+ *                 example: "550e8400-e29b-41d4-a716-446655440000"
  *     responses:
  *       201:
  *         description: Producto añadido a la wishlist correctamente
@@ -99,14 +102,17 @@ router.post("/items", authMiddleware, wishListController.addToWishlist);
  *       - Wishlist
  *     security:
  *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: productId
- *         required: true
- *         description: UUID del producto en Prisma
- *         schema:
- *           type: string
- *           example: "550e8400-e29b-41d4-a716-446655440000"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: ["productId"]
+ *             properties:
+ *               productId:
+ *                 type: string
+ *                 example: "550e8400-e29b-41d4-a716-446655440000"
  *     responses:
  *       200:
  *         description: Producto eliminado de la wishlist. Devuelve el documento eliminado.

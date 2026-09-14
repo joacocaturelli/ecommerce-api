@@ -35,6 +35,8 @@ const router = express.Router();
  *         $ref: "#/components/responses/NoTokenError"
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
+ *       500:
+ *         $ref: "#/components/responses/ServerError"
  */
 router.get("/", authMiddleware, reviewController.getReviewByUser);
 

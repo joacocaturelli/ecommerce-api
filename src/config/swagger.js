@@ -65,9 +65,10 @@ export const swaggerSpec = swaggerJSDoc({
             id: { type: "string", example: "3b64470d-5652-4547-95ad-43fe157e7b9f" },
             name: { type: "string", example: "iPhone 15" },
             description: { type: "string", nullable: true },
-            price: { type: "string", example: 999.99 },
+            price: { type: "string", example: "999.99" },
             stock: { type: "integer", example: 10 },
             imageUrl: { type: "string", nullable: true },
+            isActive: { type: "boolean", example: true },
             createdAt: { type: "string", format: "date-time", example: "2026-08-01T14:30:15.123Z" },
             updatedAt: { type: "string", format: "date-time", example: "2026-08-01T14:30:15.123Z" },
           },
@@ -162,7 +163,13 @@ export const swaggerSpec = swaggerJSDoc({
           properties: {
             id: { type: "string", example: "3b64470d-5652-4547-95ad-43fe157e7b9f" },
             userId: { type: "string", example: "3b64470d-5652-4547-95ad-43fe157e7b9f" },
-            total: { type: "string" },
+            cartId: { type: "string", example: "3b64470d-5652-4547-95ad-43fe157e7b9f" },
+            total: { type: "string", example: "1999.98" },
+            status: {
+              type: "string",
+              enum: ["PENDING", "PAID", "CANCELLED"],
+              example: "PENDING",
+            },
             createdAt: { type: "string", format: "date-time", example: "2026-08-01T14:30:15.123Z" },
             updatedAt: { type: "string", format: "date-time", example: "2026-08-01T14:30:15.123Z" },
             items: {
@@ -183,8 +190,28 @@ export const swaggerSpec = swaggerJSDoc({
             productId: { type: "string" },
             productName: { type: "string", example: "iPhone 15" },
             quantity: { type: "integer", example: 2 },
-            price: { type: "string", example: 999.99 },
+            price: { type: "string", example: "999.99" },
           },
+        },
+
+        // =====================
+        // CHECKOUT
+        // =====================
+
+        CheckoutResponse: {
+          allOf: [
+            { $ref: "#/components/schemas/Order" },
+            {
+              type: "object",
+              properties: {
+                url: {
+                  type: "string",
+                  format: "uri",
+                  example: "https://checkout.stripe.com/c/pay/cs_test_...",
+                },
+              },
+            },
+          ],
         },
 
         // =====================
@@ -243,32 +270,39 @@ export const swaggerSpec = swaggerJSDoc({
         // =====================
         AddCartItem: {
           type: "object",
-          required: ["productId", "quantity"],
+          required: ["productId"],
           properties: {
-            productId: { type: "string", example: "3" },
-            quantity: { type: "integer", example: 2 },
+            productId: {
+              type: "string",
+              example: "3b64470d-5652-4547-95ad-43fe157e7b9f",
+            },
+            quantity: {
+              type: "integer",
+              example: 2,
+              description: "Cantidad a añadir. Si no se proporciona, se utiliza 1.",
+            },
           },
         },
 
         // =====================
         // INPUTS — REVIEW
         // =====================
-        ReviewCreate: {
-          type: "object",
-          required: ["productId", "rating"],
-          properties: {
-            productId: { type: "string", example: "1" },
-            rating: { type: "integer", minimum: 1, maximum: 5, example: 4 },
-            comment: { type: "string", example: "Muy buen producto" },
-          },
-        },
-
         ReviewCreateByProduct: {
           type: "object",
           required: ["rating"],
+          description:
+            "El usuario debe haber comprado previamente el producto en un pedido pagado.",
           properties: {
-            rating: { type: "integer", minimum: 1, maximum: 5, example: 4 },
-            comment: { type: "string", example: "Muy buen producto" },
+            rating: {
+              type: "integer",
+              minimum: 1,
+              maximum: 5,
+              example: 4,
+            },
+            comment: {
+              type: "string",
+              example: "Muy buen producto",
+            },
           },
         },
 

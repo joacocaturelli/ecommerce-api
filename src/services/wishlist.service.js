@@ -1,4 +1,5 @@
 import prisma from "../config/prismaClient.js";
+import CustomError from "../utils/errors.utils.js";
 import { Wishlist } from "../models/wishlist.model.js";
 import { getProducts } from "./products.service.js";
 
@@ -6,8 +7,6 @@ export const getWishlistByUser = async (userId) => {
   try {
     // Busca la wishlist por el id del usuario
     const result = await Wishlist.find({ userId }, { productId: true, _id: false });
-
-    if (!result) throw new Error("No se pudo obtener la wishlist desde Mongo");
 
     // Trasnforma la respuesta en un array de numeros con los products id,
     // reutiliza la funcion getProducts del service
@@ -19,9 +18,7 @@ export const getWishlistByUser = async (userId) => {
     };
   } catch (error) {
     console.log("Error showing wishlist", error.message);
-    return {
-      ok: false,
-    };
+    throw error;
   }
 };
 
@@ -31,32 +28,31 @@ export const addToWishlist = async (userId, productId) => {
       where: { id: productId },
     });
 
-    if (!product) throw new Error("No se encontro el producto desde Prisma");
+    if (!product) {
+      throw new CustomError("notFound");
+    }
+
+    if (!product.isActive) {
+      throw new CustomError("notFound");
+    }
 
     const result = await Wishlist.create({ userId, productId });
-
-    if (!result) throw new Error("No se pudo añadir a la wishlist desde Mongo");
 
     return {
       ok: true,
       content: {
         result,
-        product: product,
+        product,
       },
     };
   } catch (error) {
-    if (error.code === 11000) {
-      console.log("Error adding into wishlist", error.message);
+    console.log("Error adding into wishlist:", error.message);
 
-      return {
-        ok: false,
-        error: "Product already exists in wishlist",
-      };
+    if (error.code === 11000) {
+      throw new CustomError("conflict");
     }
-    console.log("Error adding into wishlist", error.message);
-    return {
-      ok: false,
-    };
+
+    throw error;
   }
 };
 
@@ -66,23 +62,25 @@ export const removeFromWishlist = async (userId, productId) => {
       where: { id: productId },
     });
 
-    if (!product) throw new Error("No se encontro el producto desde Prisma");
+    if (!product) {
+      throw new CustomError("notFound");
+    }
 
     const result = await Wishlist.findOneAndDelete({ userId, productId });
 
-    if (!result) throw new Error("No se pudo eliminar de la wishlist desde Mongo");
+    if (!result) {
+      throw new CustomError("notFound");
+    }
 
     return {
       ok: true,
       content: {
         result,
-        product: product,
+        product,
       },
     };
   } catch (error) {
     console.log("Error deleting into wishlist", error.message);
-    return {
-      ok: false,
-    };
+    throw error;
   }
 };

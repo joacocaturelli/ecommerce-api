@@ -1,45 +1,40 @@
-export const Selector = {
-  BAD_INPUT: "badInput",
-  MISSING_INPUT: "missingInput",
-  WRONG_CRED: "wrongCredentials",
-  NO_TOKEN: "noToken",
-  UNAUTHORIZED: "unauthorized",
-  NOT_FOUND: "notFound",
-  CONFLICT: "conflict",
-  BAD_ERROR: "badError",
-};
-
-// Catalogo de errores
 const errors = {
-  [Selector.BAD_INPUT]: {
+  badInput: {
     statusCode: 400,
     message: "Incorrect input data",
   },
-  [Selector.MISSING_INPUT]: {
+
+  missingInput: {
     statusCode: 400,
     message: "Missing input data",
   },
-  [Selector.WRONG_CRED]: {
+
+  wrongCredentials: {
     statusCode: 401,
     message: "Incorrect credentials",
   },
-  [Selector.NO_TOKEN]: {
+
+  noToken: {
     statusCode: 401,
     message: "Invalid token or expired",
   },
-  [Selector.UNAUTHORIZED]: {
-    statusCode: 401,
-    message: "Unauthorized",
+
+  forbidden: {
+    statusCode: 403,
+    message: "Insufficient permissions",
   },
-  [Selector.NOT_FOUND]: {
+
+  notFound: {
     statusCode: 404,
     message: "Resource not found",
   },
-  [Selector.CONFLICT]: {
+
+  conflict: {
     statusCode: 409,
     message: "Resource already exists",
   },
-  [Selector.BAD_ERROR]: {
+
+  badError: {
     statusCode: 500,
     message: "Something went wrong",
   },
@@ -47,20 +42,11 @@ const errors = {
 
 export default class CustomError extends Error {
   constructor(errorType) {
-    super(""); // Invocar al constructor de la clase padre(Error)
+    const error = errors[errorType] ?? errors.badError;
 
-    // Destructuring de variables obtenidas del errorType en el catalogo
-    const { statusCode, message } = this._getError(errorType);
-    this.statusCode = statusCode;
-    this.message = message;
-  }
+    super(error.message);
 
-  // Las variables que empiezan con _ solo deberian poder ser accesibles
-  // a traves de los miembros de la misma clase
-
-  // Busca dentro del catalogo el valor asociado al errorType
-  // Si no hay ninguno, por defecto sera BAD_ERROR(500)
-  _getError(errorType) {
-    return errors[errorType] ?? errors[Selector.BAD_ERROR];
+    this.name = "CustomError";
+    this.statusCode = error.statusCode;
   }
 }

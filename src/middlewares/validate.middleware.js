@@ -1,16 +1,16 @@
-import { Selector } from "../utils/errors.utils.js";
+import CustomError from "../utils/errors.utils.js";
 
 export const obligatory = (fields) => {
   return (req, res, next) => {
     for (const field of fields) {
       const value = req.body[field];
 
-      if (value === undefined || value === null || value === "" || !value) {
-        return next(Selector.BAD_INPUT);
+      if (value === undefined || value === null || value === "") {
+        return next(new CustomError("badInput"));
       }
     }
 
-    next();
+    return next();
   };
 };
 
@@ -27,32 +27,31 @@ export const necessaryOne = (fields, options = {}) => {
       }
     }
 
-    // options.file comprueba si el middleware fue configurado para aceptar file
-    // req. file comprueba si el usuario envio un archivo
+    // Comprueba si el middleware acepta archivos y si se recibió uno.
     if (options.file && req.file) {
       hasValue = true;
     }
 
     if (!hasValue) {
-      return next(Selector.MISSING_INPUT);
+      return next(new CustomError("missingInput"));
     }
 
-    next();
+    return next();
   };
 };
 
-export const Register = (req, res, next) => {
+export const register = (req, res, next) => {
   const { email, password } = req.body;
 
   if (typeof password !== "string" || password.length < 8) {
-    return next(Selector.BAD_INPUT);
+    return next(new CustomError("badInput"));
   }
 
   if (typeof email !== "string") {
-    return next(Selector.BAD_INPUT);
+    return next(new CustomError("badInput"));
   }
 
-  next();
+  return next();
 };
 
 export const removeEmptyMultipartFields = (req, res, next) => {
@@ -62,5 +61,5 @@ export const removeEmptyMultipartFields = (req, res, next) => {
     }
   }
 
-  next();
+  return next();
 };

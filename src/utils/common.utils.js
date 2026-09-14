@@ -20,7 +20,7 @@ export const limiter = rateLimit({
 
 // Para auth el limite es de 10 intentos cada 15min
 export const authLimiter = rateLimit({
-  windowMs: 60 * 1000 * 15,
+  windowMs: 15 * 60 * 1000,
   max: 10,
   message: {
     ok: false,
@@ -29,13 +29,13 @@ export const authLimiter = rateLimit({
 });
 
 export const needNumber = (value, { integer = false } = {}) => {
-  if (value === undefined || value === null || value === "") {
+  if (value === undefined || value === null || (typeof value === "string" && value.trim() === "")) {
     return { ok: false };
   }
 
   const number = Number(value);
 
-  if (Number.isNaN(number)) {
+  if (!Number.isFinite(number)) {
     return { ok: false };
   }
 
@@ -47,5 +47,8 @@ export const needNumber = (value, { integer = false } = {}) => {
     return { ok: false };
   }
 
-  return { ok: true, content: number };
+  return {
+    ok: true,
+    content: number,
+  };
 };

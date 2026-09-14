@@ -1,4 +1,5 @@
 import prisma from "../config/prismaClient.js";
+import CustomError from "../utils/errors.utils.js";
 
 export const getProfile = async ({ email }) => {
   try {
@@ -7,17 +8,17 @@ export const getProfile = async ({ email }) => {
       omit: { password: true },
     });
 
-    if (!result) throw new Error("No se pudo obtener el usuario desde prisma");
+    if (!result) {
+      throw new CustomError("notFound");
+    }
 
     return {
       ok: true,
       content: result,
     };
   } catch (error) {
-    console.log("Error geting profile:", error.message);
-    return {
-      ok: false,
-    };
+    console.log("Error getting profile:", error.message);
+    throw error;
   }
 };
 
@@ -27,17 +28,13 @@ export const getUsers = async () => {
       omit: { password: true },
     });
 
-    if (!result) throw new Error("No se pudieron obtener los usuarios desde prisma");
-
     return {
       ok: true,
       content: result,
     };
   } catch (error) {
-    console.log("Error al obtener todos los usuarios:", error.message);
-    return {
-      ok: false,
-    };
+    console.log("Error getting all users:", error.message);
+    throw error;
   }
 };
 
@@ -48,7 +45,9 @@ export const getUserById = async (id) => {
       omit: { password: true },
     });
 
-    if (!result) throw new Error("No se pudo obtener el usuario desde prisma");
+    if (!result) {
+      throw new CustomError("notFound");
+    }
 
     return {
       ok: true,
@@ -56,9 +55,7 @@ export const getUserById = async (id) => {
     };
   } catch (error) {
     console.log("Error geting user by Id:", error.message);
-    return {
-      ok: false,
-    };
+    throw error;
   }
 };
 
@@ -70,26 +67,18 @@ export const updateUser = async (id, data) => {
       data,
     });
 
-    if (!result) throw new Error("No se pudo actualizar el usuario desde prisma");
-
     return {
       ok: true,
       content: result,
     };
   } catch (error) {
-    if (error.code === "P2025") {
-      console.log("Error updating user:", error.message);
+    console.log("Error updating user:", error.message);
 
-      return {
-        ok: false,
-        error: "User not found",
-      };
+    if (error.code === "P2025") {
+      throw new CustomError("notFound");
     }
 
-    console.log("Error updating user:", error.message);
-    return {
-      ok: false,
-    };
+    throw error;
   }
 };
 
@@ -100,25 +89,17 @@ export const deleteUser = async (id) => {
       omit: { password: true },
     });
 
-    if (!result) throw new Error("No se pudo eliminar el usuario desde prisma");
-
     return {
       ok: true,
       content: result,
     };
   } catch (error) {
-    if (error.code === "P2025") {
-      console.log("Error deleting user:", error.message);
+    console.log("Error deleting user:", error.message);
 
-      return {
-        ok: false,
-        error: "User not found",
-      };
+    if (error.code === "P2025") {
+      throw new CustomError("notFound");
     }
 
-    console.log("Error deleting user:", error.message);
-    return {
-      ok: false,
-    };
+    throw error;
   }
 };

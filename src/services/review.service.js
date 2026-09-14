@@ -1,4 +1,5 @@
 import prisma from "../config/prismaClient.js";
+import CustomError from "../utils/errors.utils.js";
 import { Review } from "../models/review.model.js";
 
 export const getReviewByUser = async (userId) => {
@@ -13,17 +14,13 @@ export const getReviewByUser = async (userId) => {
       },
     );
 
-    if (!result) throw new Error("Reviews no obtenidas desde Mongo");
-
     return {
       ok: true,
       content: result,
     };
   } catch (error) {
     console.log("Error showing all reviews", error.message);
-    return {
-      ok: false,
-    };
+    throw error;
   }
 };
 
@@ -33,7 +30,9 @@ export const getReviewByProduct = async (productId) => {
       where: { id: productId },
     });
 
-    if (!product) throw new Error("Producto no encontrado desde Prisma");
+    if (!product) {
+      throw new CustomError("notFound");
+    }
 
     const result = await Review.find(
       { productId },
@@ -45,17 +44,13 @@ export const getReviewByProduct = async (productId) => {
       },
     );
 
-    if (!result) throw new Error("Reviews no obtenidas desde Mongo");
-
     return {
       ok: true,
       content: result,
     };
   } catch (error) {
     console.log("Error al obtener las reviews del producto", error.message);
-    return {
-      ok: false,
-    };
+    throw error;
   }
 };
 
@@ -65,30 +60,39 @@ export const createReview = async (userId, productId, rating, comment) => {
       where: { id: productId },
     });
 
-    if (!product) throw new Error("Producto no encontrado desde Prisma");
+    if (!product) {
+      throw new CustomError("notFound");
+    }
+
+    // Comprobar que el usuario haya comprado el producto antes de poder hacerle una review
+    const purchased = await prisma.orderItem.findFirst({
+      where: {
+        productId,
+        order: {
+          userId,
+          status: "PAID",
+        },
+      },
+    });
+
+    if (!purchased) {
+      throw new CustomError("forbidden");
+    }
 
     const result = await Review.create({ userId, productId, rating, comment });
-
-    if (!result) throw new Error("No se pudo crear la review desde Mongo");
 
     return {
       ok: true,
       content: result,
     };
   } catch (error) {
-    if (error.code === 11000) {
-      console.log("Error al crear la review", error.message);
+    console.log("Error creating the review", error.message);
 
-      return {
-        ok: false,
-        error: "Review already exists",
-      };
+    if (error.code === 11000) {
+      throw new CustomError("conflict");
     }
 
-    console.log("Error al crear la review", error.message);
-    return {
-      ok: false,
-    };
+    throw error;
   }
 };
 
@@ -98,14 +102,17 @@ export const updateReview = async (userId, productId, data) => {
       where: { id: productId },
     });
 
-    if (!product) throw new Error("Producto no encontrado desde Prisma");
+    if (!product) {
+      throw new CustomError("notFound");
+    }
 
     const updateData = {};
+
     if (data.rating !== undefined) {
       updateData.rating = data.rating;
     }
 
-    if (data.comment !== undefined && data.comment !== "") {
+    if (data.comment !== undefined) {
       updateData.comment = data.comment;
     }
 
@@ -115,7 +122,9 @@ export const updateReview = async (userId, productId, data) => {
       { returnDocument: "after" },
     );
 
-    if (!result) throw new Error("No se pudo actualizar la review desde Mongo");
+    if (!result) {
+      throw new CustomError("notFound");
+    }
 
     return {
       ok: true,
@@ -123,10 +132,7 @@ export const updateReview = async (userId, productId, data) => {
     };
   } catch (error) {
     console.log("Error updating review", error.message);
-    return {
-      ok: false,
-      error: error.message,
-    };
+    throw error;
   }
 };
 
@@ -136,11 +142,15 @@ export const deleteReview = async (userId, productId) => {
       where: { id: productId },
     });
 
-    if (!product) throw new Error("Producto no encontrado desde Prisma");
+    if (!product) {
+      throw new CustomError("notFound");
+    }
 
     const result = await Review.findOneAndDelete({ userId, productId });
 
-    if (!result) throw new Error("Review no encontada desde Mongo");
+    if (!result) {
+      throw new CustomError("notFound");
+    }
 
     return {
       ok: true,
@@ -148,8 +158,6 @@ export const deleteReview = async (userId, productId) => {
     };
   } catch (error) {
     console.log("Error deleting review", error.message);
-    return {
-      ok: false,
-    };
+    throw error;
   }
 };

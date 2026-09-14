@@ -1,4 +1,5 @@
 import prisma from "../config/prismaClient.js";
+import CustomError from "../utils/errors.utils.js";
 
 export const getUserOrders = async (userId) => {
   try {
@@ -16,9 +17,7 @@ export const getUserOrders = async (userId) => {
     };
   } catch (error) {
     console.log("Error getting user orders:", error.message);
-    return {
-      ok: false,
-    };
+    throw error;
   }
 };
 
@@ -29,10 +28,12 @@ export const getOrderById = async (orderId, userId) => {
       include: { items: true },
     });
 
-    if (!order) throw new Error("Orden no encontrada");
+    if (!order) {
+      throw new CustomError("notFound");
+    }
 
     if (order.userId !== userId) {
-      throw new Error("No tienes permiso para ver esta orden");
+      throw new CustomError("forbidden");
     }
 
     return {
@@ -41,8 +42,6 @@ export const getOrderById = async (orderId, userId) => {
     };
   } catch (error) {
     console.log("Error getting order:", error.message);
-    return {
-      ok: false,
-    };
+    throw error;
   }
 };

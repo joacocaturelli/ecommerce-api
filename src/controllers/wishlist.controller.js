@@ -1,44 +1,48 @@
 import * as wishlistService from "../services/wishlist.service.js";
-import { Selector } from "../utils/errors.utils.js";
 
 export const getWishlistByUser = async (req, res, next) => {
-  const { id } = res.locals;
+  try {
+    const { id } = res.locals;
 
-  const result = await wishlistService.getWishlistByUser(id);
+    const result = await wishlistService.getWishlistByUser(id);
 
-  if (!result.ok) return next(Selector.BAD_ERROR);
-
-  return res.json({
-    ok: true,
-    data: result.content,
-  });
+    return res.json({
+      ok: true,
+      data: result.content,
+    });
+  } catch (error) {
+    return next(error);
+  }
 };
 
 export const addToWishlist = async (req, res, next) => {
-  const { productId } = req.body;
-  const { id } = res.locals;
+  try {
+    const { productId } = req.body;
+    const { id } = res.locals;
 
-  const result = await wishlistService.addToWishlist(id, productId);
+    const result = await wishlistService.addToWishlist(id, productId);
 
-  if (result.error) return next(Selector.CONFLICT);
-  if (!result.ok) return next(Selector.NOT_FOUND);
-
-  return res.status(201).json({
-    ok: true,
-    data: result.content,
-  });
+    return res.status(201).json({
+      ok: true,
+      data: result.content,
+    });
+  } catch (error) {
+    return next(error);
+  }
 };
 
 export const removeFromWishlist = async (req, res, next) => {
-  const { productId } = req.body;
-  const { id } = res.locals;
+  try {
+    const { productId } = req.body;
+    const { id } = res.locals;
 
-  const result = await wishlistService.removeFromWishlist(id, productId);
+    const result = await wishlistService.removeFromWishlist(id, productId);
 
-  if (!result.ok) return next(Selector.NOT_FOUND);
-
-  return res.json({
-    ok: true,
-    data: result.content,
-  });
+    return res.json({
+      ok: true,
+      data: result.content,
+    });
+  } catch (error) {
+    return next(error);
+  }
 };

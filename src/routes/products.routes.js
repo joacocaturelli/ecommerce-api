@@ -14,11 +14,10 @@ const router = express.Router();
  *   get:
  *     summary: Obtener todos los productos
  *     description: >
- *       Devuelve un array con todos los productos disponibles (stock >= 0).
+ *       Devuelve un array con todos los productos activos y disponibles.
  *     tags:
  *       - Products
- *     security:
- *       - cookieAuth: []
+ *     security: []
  *     responses:
  *       200:
  *         description: Lista de productos obtenida correctamente
@@ -34,8 +33,6 @@ const router = express.Router();
  *                   type: array
  *                   items:
  *                     $ref: "#/components/schemas/Product"
- *       401:
- *         $ref: "#/components/responses/NoTokenError"
  *       500:
  *         $ref: "#/components/responses/ServerError"
  */
@@ -48,8 +45,7 @@ router.get("/", productsController.getProducts);
  *     summary: Obtener un producto por ID
  *     tags:
  *       - Products
- *     security:
- *       - cookieAuth: []
+ *     security: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -71,8 +67,6 @@ router.get("/", productsController.getProducts);
  *                   example: true
  *                 data:
  *                   $ref: "#/components/schemas/Product"
- *       401:
- *         $ref: "#/components/responses/NoTokenError"
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
  *       500:
@@ -87,11 +81,8 @@ router.get("/:id", productsController.getProduct);
  *     summary: Obtener reviews de un producto
  *     description: >
  *       Devuelve todas las reviews que otros usuarios han dejado sobre el producto.
- *       No requiere autenticación explícita (aunque está marcada para consistencia).
  *     tags:
  *       - Reviews
- *     security:
- *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: productId
@@ -115,8 +106,6 @@ router.get("/:id", productsController.getProduct);
  *                   type: array
  *                   items:
  *                     $ref: "#/components/schemas/ReviewByProduct"
- *       401:
- *         $ref: "#/components/responses/NoTokenError"
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
  *       500:
@@ -130,10 +119,11 @@ router.get("/:productId/reviews", getReviewByProduct);
  *   post:
  *     summary: Crear una review para un producto
  *     description: >
- *       Crea una review del usuario autenticado sobre el producto indicado.
- *       Un usuario solo puede tener una review por producto.
- *       Si intenta crear una segunda, devuelve 409 Conflict.
- *       El campo `rating` debe ser un número entero entre 1 y 5.
+ *      Crea una review del usuario autenticado sobre el producto indicado.
+ *      El usuario debe haber comprado previamente el producto en un pedido pagado.
+ *      Un usuario solo puede tener una review por producto.
+ *      Si intenta crear una segunda, devuelve 409 Conflict.
+ *      El campo `rating` debe ser un número entero entre 1 y 5.
  *     tags:
  *       - Reviews
  *     security:
@@ -169,8 +159,6 @@ router.get("/:productId/reviews", getReviewByProduct);
  *         $ref: "#/components/responses/BadInputError"
  *       401:
  *         $ref: "#/components/responses/NoTokenError"
- *       404:
- *         $ref: "#/components/responses/NotFoundError"
  *       409:
  *         description: El usuario ya tiene una review sobre este producto
  *         $ref: "#/components/responses/ConflictError"
@@ -185,7 +173,7 @@ router.post("/:productId/reviews", authMiddleware, createReviewByProduct);
  *   post:
  *     summary: Crear un producto (solo ADMIN)
  *     description: >
- *       Requiere rol ADMIN. Si el rol es USER, devuelve 403 Unauthorized.
+ *       Requiere rol ADMIN. Si el usuario no tiene permisos suficientes, devuelve un error de autorización.
  *       Los campos `name` y `price` son obligatorios.
  *       Los campos `price` y `stock` deben ser números válidos.
  *       Para subir imagen, usa `imageUrl` como multipart/form-data en POST /api/products/image.
@@ -311,12 +299,12 @@ router.put(
 
 /**
  * @openapi
- * /api/products/{id}:
- *   delete:
- *     summary: Eliminar un producto (solo ADMIN)
+ * /api/products/deactivate/{id}:
+ *   put:
+ *     summary: Desactivar un producto (solo ADMIN)
  *     description: >
- *       Requiere rol ADMIN. Elimina el producto de forma permanente.
- *       Devuelve el objeto Product completo que fue eliminado.
+ *       Requiere rol ADMIN. Desactiva el producto estableciendo su estado
+ *       `isActive` en false. El producto no se elimina de la base de datos.
  *     tags:
  *       - Products
  *     security:
@@ -331,7 +319,7 @@ router.put(
  *           example: "550e8400-e29b-41d4-a716-446655440000"
  *     responses:
  *       200:
- *         description: Producto eliminado. Devuelve el objeto eliminado.
+ *         description: Producto desactivado correctamente
  *         content:
  *           application/json:
  *             schema:
@@ -351,6 +339,50 @@ router.put(
  *       500:
  *         $ref: "#/components/responses/ServerError"
  */
-router.delete("/:id", authMiddleware, requiredRole, productsController.deleteOneProduct);
+router.put("/deactivate/:id", authMiddleware, requiredRole, productsController.deleteOneProduct);
+
+/**
+ * @openapi
+ * /api/products/activate/{id}:
+ *   put:
+ *     summary: Activar un producto (solo ADMIN)
+ *     description: >
+ *       Requiere rol ADMIN. Activa el producto estableciendo su estado
+ *       `isActive` en true.
+ *     tags:
+ *       - Products
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: UUID del producto en Prisma
+ *         schema:
+ *           type: string
+ *           example: "550e8400-e29b-41d4-a716-446655440000"
+ *     responses:
+ *       200:
+ *         description: Producto activado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: "#/components/schemas/Product"
+ *       401:
+ *         $ref: "#/components/responses/NoTokenError"
+ *       403:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       404:
+ *         $ref: "#/components/responses/NotFoundError"
+ *       500:
+ *         $ref: "#/components/responses/ServerError"
+ */
+router.put("/activate/:id", authMiddleware, requiredRole, productsController.restoreOneProduct);
 
 export default router;

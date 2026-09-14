@@ -1,75 +1,89 @@
 import * as usersService from "../services/users.service.js";
-import { Selector } from "../utils/errors.utils.js";
+import CustomError from "../utils/errors.utils.js";
 
 export const getProfile = async (req, res, next) => {
-  const { email } = res.locals;
+  try {
+    const { email } = res.locals;
 
-  const result = await usersService.getProfile({ email });
+    const result = await usersService.getProfile({ email });
 
-  if (!result.ok) return next(Selector.NOT_FOUND);
-
-  return res.json({
-    ok: true,
-    data: result.content,
-  });
+    return res.json({
+      ok: true,
+      data: result.content,
+    });
+  } catch (error) {
+    return next(error);
+  }
 };
 
 export const getUsers = async (req, res, next) => {
-  const result = await usersService.getUsers();
+  try {
+    const result = await usersService.getUsers();
 
-  if (!result.ok) return next(Selector.NOT_FOUND);
-
-  return res.json({
-    ok: true,
-    data: result.content,
-  });
+    return res.json({
+      ok: true,
+      data: result.content,
+    });
+  } catch (error) {
+    return next(error);
+  }
 };
 
 export const getUserById = async (req, res, next) => {
-  const id = req.params.id;
+  try {
+    const { id } = req.params;
 
-  const result = await usersService.getUserById(id);
+    const result = await usersService.getUserById(id);
 
-  if (!result.ok) return next(Selector.NOT_FOUND);
-
-  return res.json({
-    ok: true,
-    data: result.content,
-  });
+    return res.json({
+      ok: true,
+      data: result.content,
+    });
+  } catch (error) {
+    return next(error);
+  }
 };
 
 export const updateUser = async (req, res, next) => {
-  const id = req.params.id;
-  const { role } = req.body;
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
 
-  const roles = ["ADMIN", "USER"];
-  const upperRole = role.toUpperCase();
+    const roles = ["ADMIN", "USER"];
 
-  // Comprobamos que el rol sea correcto
-  if (!roles.includes(upperRole)) return next(Selector.BAD_INPUT);
+    if (typeof role !== "string") {
+      throw new CustomError("badInput");
+    }
 
-  const result = await usersService.updateUser(id, { role: upperRole });
+    const upperRole = role.toUpperCase();
 
-  if (result.error) return next(Selector.NOT_FOUND);
-  if (!result.ok) return next(Selector.BAD_ERROR);
+    // Comprobamos que el rol sea correcto
+    if (!roles.includes(upperRole)) {
+      throw new CustomError("badInput");
+    }
 
-  return res.json({
-    ok: true,
-    data: result.content,
-  });
+    const result = await usersService.updateUser(id, { role: upperRole });
+
+    return res.json({
+      ok: true,
+      data: result.content,
+    });
+  } catch (error) {
+    return next(error);
+  }
 };
 
 export const deleteUser = async (req, res, next) => {
-  const id = req.params.id;
+  try {
+    const { id } = req.params;
 
-  const result = await usersService.deleteUser(id);
+    const result = await usersService.deleteUser(id);
 
-  if (result.error) return next(Selector.NOT_FOUND);
-
-  if (!result.ok) return next(Selector.BAD_ERROR);
-
-  return res.json({
-    ok: true,
-    data: result.content,
-  });
+    return res.json({
+      ok: true,
+      data: result.content,
+    });
+  } catch (error) {
+    return next(error);
+  }
 };

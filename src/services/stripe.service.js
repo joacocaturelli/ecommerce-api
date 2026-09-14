@@ -1,5 +1,6 @@
 import stripe from "../config/stripe.js";
 import prisma from "../config/prismaClient.js";
+import CustomError from "../utils/errors.utils.js";
 
 export const createCheckoutSession = async ({ order, items, frontendUrl }) => {
   try {
@@ -31,11 +32,8 @@ export const createCheckoutSession = async ({ order, items, frontendUrl }) => {
       content: session,
     };
   } catch (error) {
-    console.log("Error creating Stripe chechout session", error.message);
-
-    return {
-      ok: false,
-    };
+    console.log("Error creating Stripe checkout session", error.message);
+    throw error;
   }
 };
 
@@ -46,7 +44,7 @@ export const handleCheckoutSessionCompleted = async (session) => {
     const orderId = session.metadata?.orderId;
 
     if (!orderId) {
-      throw new Error("El evento de Stripe no contiene orderId");
+      throw new CustomError("badInput");
     }
 
     await prisma.$transaction(async (tx) => {
@@ -60,7 +58,7 @@ export const handleCheckoutSessionCompleted = async (session) => {
       });
 
       if (!order) {
-        throw new Error("Orden no encontrada");
+        throw new CustomError("notFound");
       }
 
       // Idempotencia:
@@ -70,7 +68,7 @@ export const handleCheckoutSessionCompleted = async (session) => {
       }
 
       if (order.status !== "PENDING") {
-        throw new Error(`La orden no está pendiente: ${order.status}`);
+        throw new CustomError("badInput");
       }
 
       // Comprobamos nuevamente el stock antes de descontarlo
@@ -82,15 +80,15 @@ export const handleCheckoutSessionCompleted = async (session) => {
         });
 
         if (!product) {
-          throw new Error(`Producto no encontrado: ${item.productId}`);
+          throw new CustomError("notFound");
         }
 
         if (!product.isActive) {
-          throw new Error(`Producto no disponible: ${item.productId}`);
+          throw new CustomError("notFound");
         }
 
         if (product.stock < item.quantity) {
-          throw new Error(`Stock insuficiente para el producto: ${product.name}`);
+          throw new CustomError("badInput");
         }
       }
 
@@ -133,11 +131,8 @@ export const handleCheckoutSessionCompleted = async (session) => {
       ok: true,
     };
   } catch (error) {
-    console.log("Error procesando checkout.session.completed:", error.message);
-
-    return {
-      ok: false,
-    };
+    console.log("Error processing checkout.session.completed:", error.message);
+    throw error;
   }
 };
 
@@ -146,7 +141,7 @@ export const handleCheckoutSessionCancelled = async (session) => {
     const orderId = session.metadata?.orderId;
 
     if (!orderId) {
-      throw new Error("El evento de Stripe no contiene orderId");
+      throw new CustomError("badInput");
     }
 
     await prisma.$transaction(async (tx) => {
@@ -157,7 +152,7 @@ export const handleCheckoutSessionCancelled = async (session) => {
       });
 
       if (!order) {
-        throw new Error(`Orden no encontrada: ${orderId}`);
+        throw new CustomError("notFound");
       }
 
       // Si ya esta cancelada no hacemos nada
@@ -171,7 +166,7 @@ export const handleCheckoutSessionCancelled = async (session) => {
       }
 
       if (order.status !== "PENDING") {
-        throw new Error(`La orden no esta pendiente: ${orderId}`);
+        throw new CustomError("badInput");
       }
 
       await tx.order.update({
@@ -188,10 +183,7 @@ export const handleCheckoutSessionCancelled = async (session) => {
       ok: true,
     };
   } catch (error) {
-    console.log("Error cancelando la orden desde Stripe:", error.message);
-
-    return {
-      ok: false,
-    };
+    console.log("Error cancelling the order via Stripe:", error.message);
+    throw error;
   }
 };

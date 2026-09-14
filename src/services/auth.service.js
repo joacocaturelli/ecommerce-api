@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "../config/prismaClient.js";
+import CustomError from "../utils/errors.utils.js";
 import { env } from "../config/env.js";
 
 // Registrar un nuevo usuario
@@ -13,8 +14,6 @@ export const registerUser = async ({ password, email, name }) => {
     const result = await prisma.user.create({
       data: { email, password: hashedPassword, name },
     });
-
-    if (!result) throw new Error("Prisma no pudo crear el usuario");
 
     const userData = {
       id: result.id,
@@ -29,9 +28,11 @@ export const registerUser = async ({ password, email, name }) => {
     };
   } catch (error) {
     console.log("Error registering user", error.message);
-    return {
-      ok: false,
-    };
+
+    if (error.code === "P2002") {
+      throw new CustomError("conflict");
+    }
+    throw error;
   }
 };
 
@@ -42,11 +43,15 @@ export const loginUser = async ({ email, password }) => {
       where: { email }, // Buscamos el usuario por su email
     });
 
-    if (!user) throw new Error("User not found");
+    if (!user) {
+      throw new CustomError("wrongCredentials");
+    }
 
     const isValid = await bcrypt.compare(password, user.password); // Comparamos su contraseña
 
-    if (!isValid) throw new Error("Incorrect email or password");
+    if (!isValid) {
+      throw new CustomError("wrongCredentials");
+    }
 
     const token = jwt.sign(
       {
@@ -75,8 +80,6 @@ export const loginUser = async ({ email, password }) => {
     };
   } catch (error) {
     console.log("Error logging user", error.message);
-    return {
-      ok: false,
-    };
+    throw error;
   }
 };

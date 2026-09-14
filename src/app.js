@@ -17,9 +17,9 @@ import orderRoutes from "./routes/orders.routes.js";
 
 import { stripeWebhook } from "./controllers/stripe.controller.js";
 
+import CustomError from "./utils/errors.utils.js";
 import errorHandler from "./middlewares/errorHandler.middleware.js";
 import { env } from "./config/env.js";
-import { Selector } from "./utils/errors.utils.js";
 import { limiter } from "./utils/common.utils.js";
 
 const app = express();
@@ -54,14 +54,9 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 
 app.use((req, res, next) => {
-  return next(Selector.NOT_FOUND);
+  return next(new CustomError("notFound"));
 });
 
-app.use(errorHandler, ({ statusCode = 500, message }, req, res, next) => {
-  return res.status(statusCode).json({
-    ok: false,
-    error: message,
-  });
-});
+app.use(errorHandler);
 
 export default app;

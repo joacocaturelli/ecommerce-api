@@ -1,5 +1,8 @@
 import prisma from "../config/prismaClient.js";
+import CustomError from "../utils/errors.utils.js";
+import { createCheckoutSession } from "./stripe.service.js";
 import { Prisma } from "@prisma/client";
+import { env } from "../config/env.js";
 
 // Obtenemos el carrito active del user y si no tiene se lo creamos
 export const getCart = async (userId) => {
@@ -16,17 +19,13 @@ export const getCart = async (userId) => {
       });
     }
 
-    if (!result) throw new Error("No se pudo inicializar el carrito desde prisma");
-
     return {
       ok: true,
       content: result,
     };
   } catch (error) {
     console.log("Error getting cart:", error.message);
-    return {
-      ok: false,
-    };
+    throw error;
   }
 };
 
@@ -38,9 +37,13 @@ export const getCartById = async (cartId, userId) => {
       include: { items: { include: { product: true } } },
     });
 
-    if (!result) throw new Error("No se pudo obtener el carrito desde prisma");
+    if (!result) {
+      throw new CustomError("notFound");
+    }
 
-    if (result.userId !== userId) throw new Error("No tienes permiso para acceder a ese carrito");
+    if (result.userId !== userId) {
+      throw new CustomError("forbidden");
+    }
 
     return {
       ok: true,
@@ -48,9 +51,7 @@ export const getCartById = async (cartId, userId) => {
     };
   } catch (error) {
     console.log("Error getting cart:", error.message);
-    return {
-      ok: false,
-    };
+    throw error;
   }
 };
 
@@ -62,18 +63,24 @@ export const addItem = async (userId, productId, quantity = 1) => {
       where: { id: productId },
     });
 
-    if (!product) throw new Error("Producto no encontrado");
+    if (!product) {
+      throw new CustomError("notFound");
+    }
+
+    if (!product.isActive) {
+      throw new CustomError("notFound");
+    }
 
     // Extraemos los datos del carrito y lo guardamos como cart
     const cartResult = await getCart(userId);
-
-    if (!cartResult.ok) throw new Error("No se pudo obtener el carrito");
-
     const cart = cartResult.content;
 
     // Comprobar si existe el producto en el carrito
     const existingItem = await prisma.cartItem.findFirst({
-      where: { cartId: cart.id, productId },
+      where: {
+        cartId: cart.id,
+        productId,
+      },
     });
 
     // Corroboramos antes de añadir el producto al carrito que la
@@ -82,10 +89,7 @@ export const addItem = async (userId, productId, quantity = 1) => {
     const finalQuantity = existingItem ? existingItem.quantity + quantity : quantity;
 
     if (product.stock < finalQuantity) {
-      return {
-        ok: false,
-        error: "insufficient stock",
-      };
+      throw new CustomError("badInput");
     }
 
     // Si existe el producto en el carrito y la cantidad
@@ -104,14 +108,16 @@ export const addItem = async (userId, productId, quantity = 1) => {
     return {
       ok: true,
       content: await prisma.cartItem.create({
-        data: { cartId: cart.id, productId, quantity },
+        data: {
+          cartId: cart.id,
+          productId,
+          quantity,
+        },
       }),
     };
   } catch (error) {
     console.log("Error adding item to cart:", error.message);
-    return {
-      ok: false,
-    };
+    throw error;
   }
 };
 
@@ -128,26 +134,18 @@ export const removeItem = async (userId, productId) => {
       },
     });
 
-    if (!result) throw new Error("CartItem no eliminado del carrito desde prisma");
-
     return {
       ok: true,
       content: result,
     };
   } catch (error) {
-    if (error.code === "P2025") {
-      console.log("Error deleting cart item from cart", error.message);
+    console.log("Error deleting cart item", error.message);
 
-      return {
-        ok: false,
-        error: "Cart item not found",
-      };
+    if (error.code === "P2025") {
+      throw new CustomError("notFound");
     }
 
-    console.log("Error deleting cart item", error.message);
-    return {
-      ok: false,
-    };
+    throw error;
   }
 };
 
@@ -156,12 +154,10 @@ export const checkOut = async (userId) => {
   try {
     let order; // Declaramos la variable
 
-    // Creamos la orden usando $transaction para que si
-    // una de las peticiones a la DB falla o si lanzamos
-    // una excepcion, se haga un rollback
-    // cancelando todas las peticiones
+    // Creamos la orden usando $transaction para que si una de las peticiones a la DB falla
+    // o si lanzamos una excepcion, se haga un rollback cancelando todas las peticiones
     await prisma.$transaction(async (tx) => {
-      // Buscamos el carrito activo
+      // Buscamos el carrito activo del usuario
       const cart = await tx.cart.findFirst({
         where: {
           userId,
@@ -171,52 +167,96 @@ export const checkOut = async (userId) => {
       });
 
       if (!cart) {
-        throw new Error("No hay carrito activo");
+        throw new CustomError("notFound");
       }
 
       if (cart.items.length === 0) {
-        throw new Error("El carrito esta vacio");
+        throw new CustomError("badInput");
       }
 
-      // Obtenemos el precio total del carrito (Recomendado por chatGPT)
       // Obtenemos los ids de los productos
       const productIds = cart.items.map((item) => item.productId);
 
       // Buscamos esos productos con sus ids
       const products = await tx.product.findMany({
-        where: { id: { in: productIds } },
-      });
-
-      // Creamos un map de objetos de los productos
-      // para acceder rapidamente al precio
-      const productsMap = Object.fromEntries(products.map((product) => [product.id, product]));
-
-      // Calculamos el total
-      const total = cart.items.reduce((sum, item) => {
-        const product = productsMap[item.productId];
-        return sum.plus(product.price.times(item.quantity)); // La forma recomendada por Prisma para decimales
-      }, new Prisma.Decimal(0));
-
-      // Comprobamos el stock de todos los productos
-      for (const item of cart.items) {
-        const product = productsMap[item.productId];
-
-        if (!product) throw new Error("Producto no encontrado");
-
-        // Volvemos a checkear el stock por si otro usuario hizo una compra
-        if (product.stock < item.quantity) {
-          throw new Error("Stock insuficiente");
-        }
-      }
-
-      // Creamos la orden
-      order = await tx.order.create({
-        data: {
-          userId,
-          total,
+        where: {
+          id: { in: productIds },
         },
       });
 
+      // Creamos un map para acceder rapidamente a cada producto
+      const productsMap = Object.fromEntries(products.map((product) => [product.id, product]));
+
+      // Calculamos el total actual del carrito
+      const total = cart.items.reduce((sum, item) => {
+        const product = productsMap[item.productId];
+
+        if (!product) {
+          throw new CustomError("notFound");
+        }
+
+        return sum.plus(product.price.times(item.quantity)); // La forma recomendada por Prisma para decimales
+      }, new Prisma.Decimal(0));
+
+      // Comprobamos el stock actual
+      for (const item of cart.items) {
+        const product = productsMap[item.productId];
+
+        if (!product) {
+          throw new CustomError("notFound");
+        }
+
+        if (!product.isActive) {
+          throw new CustomError("notFound");
+        }
+
+        if (product.stock < item.quantity) {
+          throw new CustomError("badInput");
+        }
+      }
+
+      // Buscamos si ya existe una orden pendiente
+      // que pertenezca al mismo carrito
+      const pendingOrder = await tx.order.findFirst({
+        where: {
+          cartId: cart.id,
+          status: "PENDING",
+        },
+      });
+
+      if (pendingOrder) {
+        // Si existe reutilizamos la orden pendiente
+        // de ESTE carrito
+        order = await tx.order.update({
+          where: {
+            id: pendingOrder.id,
+          },
+          data: {
+            total,
+            stripeSessionId: null,
+          },
+        });
+
+        // Eliminamos los items anteriores de la orden (no del carrito)
+        await tx.orderItem.deleteMany({
+          where: {
+            orderId: order.id,
+          },
+        });
+      } else {
+        // Si no existe una orden pendiente la creamos
+        // vinculada al carrito
+        order = await tx.order.create({
+          data: {
+            userId,
+            cartId: cart.id,
+            total,
+            status: "PENDING",
+          },
+        });
+      }
+
+      // Creamos el snapshot actual de los productos
       for (const item of cart.items) {
         const product = productsMap[item.productId];
 
@@ -230,36 +270,71 @@ export const checkOut = async (userId) => {
             price: product.price,
           },
         });
-
-        // Actualizamos el stock del producto
-        await tx.product.update({
-          where: {
-            id: product.id,
-          },
-          data: {
-            stock: { decrement: item.quantity }, // Forma recomendada por Prisma para sumar/restar campos numericos
-          },
-        });
       }
+    });
 
-      // Hacemos el checkout del carrito
-      await tx.cart.update({
-        where: { id: cart.id },
-        data: { status: "CHECKED_OUT" },
-      });
+    // Obtenemos la orden con sus items
+    const orderWithItems = await prisma.order.findUnique({
+      where: {
+        id: order.id,
+      },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
+    });
+
+    if (!orderWithItems) {
+      throw new CustomError("badError");
+    }
+
+    // Creamos la sesion con Stripe
+    const stripeResult = await createCheckoutSession({
+      order: orderWithItems,
+      items: orderWithItems.items,
+      frontendUrl: env.FRONTEND_URL,
+    });
+
+    if (!stripeResult.ok) {
+      throw new CustomError("badError");
+    }
+
+    //Guardamos el ID de la sesion de Stripe
+    await prisma.order.update({
+      where: {
+        id: order.id,
+      },
+      data: {
+        stripeSessionId: stripeResult.content.id,
+      },
+    });
+
+    // Obtenemos de nuevo la orden actualizada con el ID de Stripe
+    const finalOrder = await prisma.order.findUnique({
+      where: {
+        id: order.id,
+      },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
     });
 
     return {
       ok: true,
-      content: await prisma.order.findUnique({
-        where: { id: order.id },
-        include: { items: { include: { product: true } } },
-      }),
+      content: {
+        ...finalOrder,
+        url: stripeResult.content.url,
+      },
     };
   } catch (error) {
     console.log("Error doing checking out:", error.message);
-    return {
-      ok: false,
-    };
+    throw error;
   }
 };

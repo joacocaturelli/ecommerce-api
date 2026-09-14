@@ -13,7 +13,7 @@ const router = express.Router();
  *       Devuelve las orders creadas por el usuario autenticado.
  *       Incluye los items del carrito con productId y quantity.
  *       Se mantienen los price y name del momento en
- *       el que se hico el checkOut
+ *       el que se hizo el checkOut
  *     tags:
  *       - Orders
  *     security:
@@ -35,6 +35,8 @@ const router = express.Router();
  *                     $ref: "#/components/schemas/Order"
  *       401:
  *         $ref: "#/components/responses/NoTokenError"
+ *       500:
+ *         $ref: "#/components/responses/ServerError"
  */
 router.get("/", authMiddleware, orderController.getUserOrders);
 
@@ -46,7 +48,7 @@ router.get("/", authMiddleware, orderController.getUserOrders);
  *     description: >
  *       Devuelve la order del usuario. Incluye los items del carrito con
  *       productId y quantity. Se mantienen los price y name del momento en
- *       el que se hico el checkOut
+ *       el que se hizo el checkOut
  *     tags:
  *       - Orders
  *     security:

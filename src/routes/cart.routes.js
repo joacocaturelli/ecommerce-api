@@ -73,7 +73,6 @@ router.get("/", authMiddleware, cartController.getCart);
  *       401:
  *         $ref: "#/components/responses/NoTokenError"
  *       404:
- *         description: Carrito no encontrado o no pertenece al usuario autenticado
  *         $ref: "#/components/responses/NotFoundError"
  */
 router.get("/:cartId", authMiddleware, cartController.getCartById);
@@ -153,7 +152,7 @@ router.post("/items", authMiddleware, validate.obligatory(["productId"]), cartCo
  *             properties:
  *               productId:
  *                 type: string
- *                 example: "3"
+ *                 example: "550e8400-e29b-41d4-a716-446655440000"
  *                 description: ID del producto a eliminar
  *     responses:
  *       200:
@@ -173,7 +172,6 @@ router.post("/items", authMiddleware, validate.obligatory(["productId"]), cartCo
  *       401:
  *         $ref: "#/components/responses/NoTokenError"
  *       404:
- *         description: Producto no encontrado en el carrito
  *         $ref: "#/components/responses/NotFoundError"
  *       500:
  *         $ref: "#/components/responses/ServerError"
@@ -191,22 +189,20 @@ router.delete(
  *   post:
  *     summary: Finalizar compra del carrito
  *     description: >
- *       Procesa el carrito ACTIVE del usuario autenticado en una transacción:
- *       1. Valida que existe carrito y tiene items
- *       2. Valida stock disponible
- *       3. Crea una Order con el total calculado
- *       4. Crea OrderItem para cada producto (snapshot: nombre, cantidad, precio)
- *       5. Decrementa el stock de cada producto
- *       6. Marca el carrito como CHECKED_OUT
- *       Si algo falla, revierte todos los cambios (rollback).
- *       Devuelve la Order creada con todos sus OrderItems incluidos.
+ *      Prepara el checkout del carrito ACTIVE del usuario autenticado.
+ *      Valida que el carrito exista, tenga productos y que haya stock disponible.
+ *      Crea o reutiliza una Order con estado PENDING y crea sus OrderItems
+ *      guardando una copia del nombre, cantidad y precio de cada producto.
+ *      Después crea una sesión de Stripe Checkout y devuelve su URL.
+ *      El stock y el estado del carrito se actualizan cuando Stripe confirma
+ *      el pago mediante el webhook.
  *     tags:
  *       - Cart
  *     security:
  *       - cookieAuth: []
  *     responses:
  *       200:
- *         description: Checkout completado correctamente. Devuelve la Order con sus items.
+ *         description: Checkout iniciado correctamente. Devuelve la Order PENDING y la URL de Stripe Checkout.
  *         content:
  *           application/json:
  *             schema:
@@ -216,11 +212,10 @@ router.delete(
  *                   type: boolean
  *                   example: true
  *                 data:
- *                   $ref: "#/components/schemas/Order"
+ *                   $ref: "#/components/schemas/CheckoutResponse"
  *       401:
  *         $ref: "#/components/responses/NoTokenError"
  *       400:
- *         description: "Carrito vacío o stock insuficiente"
  *         $ref: "#/components/responses/BadInputError"
  *       500:
  *         $ref: "#/components/responses/ServerError"
