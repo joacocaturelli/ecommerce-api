@@ -28,31 +28,18 @@ export const loginUser = async (req, res, next) => {
 
     const emailNormalized = email.toLowerCase();
 
-    console.log("🔐 LOGIN ATTEMPT:");
-    console.log("   Email:", emailNormalized);
-    console.log("   Origin:", req.get("origin"));
-    console.log("   User-Agent:", req.get("user-agent"));
-    console.log("   Cookie options:", cookieOptions);
-
     const result = await authService.loginUser({
       email: emailNormalized,
       password,
     });
 
-    console.log("✅ LOGIN EXITOSO, enviando cookie...");
-    console.log("   Token:", result.content.token.substring(0, 20) + "...");
-
     res.cookie("token", result.content.token, cookieOptions);
-
-    console.log("✅ Cookie establecida");
-    console.log("   Set-Cookie header:", res.getHeader("Set-Cookie"));
 
     return res.json({
       ok: true,
       data: result.content,
     });
   } catch (error) {
-    console.log("❌ ERROR LOGIN:", error.message);
     return next(error);
   }
 };
