@@ -41,6 +41,11 @@ app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), strip
 app.use(express.json()); // Para leer los datos del body
 app.use(express.urlencoded({ extended: true })); // Para leer los datos del body en formato urlencode
 app.use(cookieParser());
+
+// 🔑 IMPORTANTE: Configurar Express para confiar en el proxy (Render)
+// Esto es necesario para que el rate limiter funcione correctamente
+// cuando la app está detrás de un proxy como Render, Nginx, etc.
+app.set("trust proxy", 1);
 app.use(limiter);
 
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
