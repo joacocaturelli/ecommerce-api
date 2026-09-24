@@ -26,14 +26,16 @@ const app = express();
 
 app.use(helmet());
 
-app.use(
-  cors({
-    origin: env.CORS_ORIGINS,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  }),
-);
+const corsOptions = {
+  origin: env.CORS_ORIGINS,
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), stripeWebhook);
 
